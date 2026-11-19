@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { AvisoConfiguracion } from "@/components/aviso-configuracion";
+import { ContenedorPrincipal } from "@/components/contenedor-principal";
 import { Navegacion } from "@/components/navegacion";
 import { CargandoLista, Esqueleto } from "@/components/ui/estados";
 import { VigilanteLogros } from "@/components/vigilante-logros";
@@ -30,7 +31,7 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
     <Proveedores>
       <div className="md:flex">
         <Navegacion />
-        <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-28 md:px-8 md:pt-10 md:pb-10">
+        <ContenedorPrincipal>
           <div className="mb-4">
             <AvisoConfiguracion />
           </div>
@@ -40,7 +41,7 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
               <VigilanteLogros />
             </EnPeticion>
           </Suspense>
-        </main>
+        </ContenedorPrincipal>
       </div>
     </Proveedores>
   );

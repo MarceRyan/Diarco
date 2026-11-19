@@ -54,6 +54,21 @@ export function distribuirBloques<T extends { inicio: string; fin: string }>(blo
 }
 
 /**
+ * Minutos planificados por semana en cada categoría: un bloque de 2 h de lunes
+ * a viernes suma 10 h. De mayor a menor; categoria_id null = sin categoría.
+ */
+export function minutosPlanificadosPorCategoria(
+  bloques: readonly { inicio: string; fin: string; dias_semana: readonly number[]; categoria_id: number | null }[],
+): { categoria_id: number | null; minutos: number }[] {
+  const totales = new Map<number | null, number>();
+  for (const b of bloques) {
+    const minutos = (horaAMinutos(b.fin) - horaAMinutos(b.inicio)) * b.dias_semana.length;
+    totales.set(b.categoria_id, (totales.get(b.categoria_id) ?? 0) + minutos);
+  }
+  return [...totales.entries()].map(([categoria_id, minutos]) => ({ categoria_id, minutos })).sort((a, b) => b.minutos - a.minutos);
+}
+
+/**
  * Rango de horas a mostrar para un día: siempre al menos de 7:00 a 21:00 y
  * ampliado para que quepan todos los bloques. Devuelve horas enteras [desde, hasta].
  */

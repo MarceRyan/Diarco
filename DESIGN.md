@@ -70,11 +70,21 @@ Errores con "¡Uy!" y una salida clara ("Intentar de nuevo"). Nunca regañar por
 - Horario: dos vistas con selector [Semana | Día] (se recuerda la última en el navegador).
   **Semana** (por defecto): cuadrícula de 7 columnas × horas (52 px por hora); en móvil se desliza de lado con la
   columna de horas fija y abre centrada en hoy; tocar la cabecera de un día abre su vista Día.
+  Navegación entre semanas (‹ 16 – 22 nov ›). Dos capas: el **plan** (bloques con relleno de su categoría) y
+  **lo que hiciste** (actividades de la bitácora con borde punteado violeta, del alto de sus minutos; "+N" en la
+  cabecera para las que no tienen hora). Tocar una actividad abre la Bitácora en ese día (`/bitacora?fecha=`).
+  Panel lateral "Esta semana" (a la derecha desde `xl`, debajo en pantallas menores): ahora mismo / siguiente bloque,
+  plan semanal por categoría, lo registrado por categoría y la leyenda.
   **Día**: semana como 7 tarjetas de día (con puntitos de color de sus bloques) + el día elegido como línea de tiempo
   vertical (64 px por hora). Cada bloque mide lo que dura; si dos se pisan van lado a lado (`distribuirBloques`).
   Línea "Ahora" en mandarina (solo en el navegador). Tocar una hora libre crea un bloque a esa hora.
 - Nunca usar `<input type="time">`: `SelectorHora` (números grandes con ▲▼ y atajos) y `SelectorDuracion` (chips).
   En bloques se elige "cuánto dura", no la hora de fin.
+
+## Ancho de pantalla
+
+Pantallas de lectura y listas (Hoy, Hábitos, Bitácora, Logros, Ajustes): columna de `max-w-3xl`.
+Horario y Progreso: hasta `96rem` para aprovechar el escritorio (`ContenedorPrincipal`).
 
 ## Navegación
 

@@ -206,15 +206,22 @@ export async function eliminarActividad(cliente: ClienteDiarco, id: number) {
   comprobar(await cliente.from("actividades").delete().eq("id", id));
 }
 
-const actividadResumenSchema = actividadSchema.pick({ fecha: true, categoria_id: true, minutos: true });
+const actividadResumenSchema = actividadSchema.pick({
+  id: true,
+  fecha: true,
+  hora: true,
+  descripcion: true,
+  categoria_id: true,
+  minutos: true,
+});
 
-/** Actividades de un rango (solo los campos que usan estadísticas y logros). */
+/** Actividades de un rango (lo que usan estadísticas, logros y la vista semanal del horario). */
 export async function listarActividadesRango(cliente: ClienteDiarco, desde: Fecha, hasta: Fecha) {
   return obtenerTodo(
     (inicio, fin) =>
       cliente
         .from("actividades")
-        .select("fecha, categoria_id, minutos")
+        .select("id, fecha, hora, descripcion, categoria_id, minutos")
         .gte("fecha", desde)
         .lte("fecha", hasta)
         .order("fecha")

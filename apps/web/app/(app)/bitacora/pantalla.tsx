@@ -3,6 +3,7 @@
 import { compararFechas, esFechaValida, minutosPorCategoria, sumarDias, type Actividad } from "@diarco/shared";
 import { useActividades, useCategorias, useHabitos, useHoy, useNotasDia } from "@diarco/shared/hooks";
 import { CalendarDays, Check, ChevronLeft, ChevronRight, NotebookPen, Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ChipCategoria } from "@/components/categorias";
 import { NotaHabito } from "@/components/nota-habito";
@@ -49,7 +50,11 @@ function HabitosDelDia({ fecha, hoy }: { fecha: string; hoy: string }) {
 
 export function PantallaBitacora() {
   const hoy = useHoy();
-  const [fecha, setFecha] = useState(hoy);
+  // ?fecha=AAAA-MM-DD abre un día concreto (por ejemplo, desde el horario); nunca un día futuro.
+  const fechaUrl = useSearchParams().get("fecha");
+  const [fecha, setFecha] = useState(() =>
+    fechaUrl && esFechaValida(fechaUrl) && compararFechas(fechaUrl, hoy) <= 0 ? fechaUrl : hoy,
+  );
   const actividades = useActividades(fecha);
   const { data: categorias = [] } = useCategorias();
   const [edicion, setEdicion] = useState<Edicion>(null);

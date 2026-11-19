@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distribuirBloques, rangoHorasDia } from "../src";
+import { distribuirBloques, minutosPlanificadosPorCategoria, rangoHorasDia } from "../src";
 
 const b = (id: string, inicio: string, fin: string) => ({ id, inicio, fin });
 const resumen = (lista: ReturnType<typeof distribuirBloques<ReturnType<typeof b>>>) =>
@@ -39,6 +39,23 @@ describe("distribuirBloques", () => {
       ["a", 0, 2],
       ["b", 1, 2],
       ["c", 0, 1],
+    ]);
+  });
+});
+
+describe("minutosPlanificadosPorCategoria", () => {
+  it("multiplica por los días de la semana y ordena de mayor a menor", () => {
+    expect(
+      minutosPlanificadosPorCategoria([
+        { inicio: "09:00", fin: "11:00", dias_semana: [1, 2, 3, 4, 5], categoria_id: 3 }, // 10 h
+        { inicio: "19:00", fin: "20:30", dias_semana: [2, 4], categoria_id: 1 }, // 3 h
+        { inicio: "07:00", fin: "08:00", dias_semana: [6], categoria_id: 1 }, // 1 h
+        { inicio: "13:00", fin: "13:30", dias_semana: [0], categoria_id: null }, // 30 min
+      ]),
+    ).toEqual([
+      { categoria_id: 3, minutos: 600 },
+      { categoria_id: 1, minutos: 240 },
+      { categoria_id: null, minutos: 30 },
     ]);
   });
 });
