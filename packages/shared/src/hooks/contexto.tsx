@@ -40,6 +40,12 @@ export const claves = {
   completadosRango: (desde: Fecha, hasta: Fecha) => ["completados", desde, hasta] as const,
   resumen: ["resumen"] as const,
   resumenRango: (desde: Fecha, hasta: Fecha) => ["resumen", desde, hasta] as const,
+  // Cuelga de "resumen": marcar un hábito también lo invalida.
+  cumplimientoRango: (desde: Fecha, hasta: Fecha) => ["resumen", "cumplimiento", desde, hasta] as const,
+  actividadesRango: (desde: Fecha, hasta: Fecha) => ["actividades", "rango", desde, hasta] as const,
+  animoRango: (desde: Fecha, hasta: Fecha) => ["animo", "rango", desde, hasta] as const,
+  logros: ["logros"] as const,
+  usuarioLogros: ["usuario_logros"] as const,
   categorias: ["categorias"] as const,
   actividades: ["actividades"] as const,
   actividadesDia: (fecha: Fecha) => ["actividades", fecha] as const,

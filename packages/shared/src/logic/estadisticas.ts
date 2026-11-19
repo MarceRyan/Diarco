@@ -2,8 +2,8 @@
  * Estadísticas para las pantallas de progreso y sus gráficos.
  * Funciones puras: reciben filas ya consultadas y devuelven datos listos para graficar.
  */
-import type { Actividad, CumplimientoHabito, DiaSemana, EstadoAnimo } from "../types";
-import { diaSemana } from "./fechas";
+import type { Actividad, CumplimientoHabito, DiaSemana, EstadoAnimo, Fecha } from "../types";
+import { diaSemana, rangoFechas } from "./fechas";
 
 /** Nombres cortos de los días, indexados por DiaSemana (0 = domingo). */
 export const NOMBRES_DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"] as const;
@@ -81,6 +81,24 @@ export function promedioAnimo(estados: readonly Pick<EstadoAnimo, "nivel">[]): n
   if (estados.length === 0) return null;
   const suma = estados.reduce((total, e) => total + e.nivel, 0);
   return Math.round((suma / estados.length) * 10) / 10;
+}
+
+/**
+ * Organiza un rango de fechas en columnas de semanas (lunes a domingo) para
+ * un mapa de calor tipo calendario. Los huecos fuera del rango son null.
+ */
+export function semanasCalendario(desde: Fecha, hasta: Fecha): (Fecha | null)[][] {
+  const semanas: (Fecha | null)[][] = [];
+  let semana: (Fecha | null)[] = Array.from({ length: (diaSemana(desde) + 6) % 7 }, () => null);
+  for (const fecha of rangoFechas(desde, hasta)) {
+    semana.push(fecha);
+    if (semana.length === 7) {
+      semanas.push(semana);
+      semana = [];
+    }
+  }
+  if (semana.length > 0) semanas.push([...semana, ...Array.from({ length: 7 - semana.length }, () => null)]);
+  return semanas;
 }
 
 /** Intensidad para el mapa de calor: 0 (nada o sin hábitos) a 4 (100 %). */

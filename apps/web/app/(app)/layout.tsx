@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AvisoConfiguracion } from "@/components/aviso-configuracion";
 import { Navegacion } from "@/components/navegacion";
 import { CargandoLista, Esqueleto } from "@/components/ui/estados";
+import { VigilanteLogros } from "@/components/vigilante-logros";
 import { Proveedores } from "./proveedores";
 
 /**
@@ -34,7 +35,10 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
             <AvisoConfiguracion />
           </div>
           <Suspense fallback={<CargandoPantalla />}>
-            <EnPeticion>{children}</EnPeticion>
+            <EnPeticion>
+              {children}
+              <VigilanteLogros />
+            </EnPeticion>
           </Suspense>
         </main>
       </div>

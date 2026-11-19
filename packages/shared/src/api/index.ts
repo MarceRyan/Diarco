@@ -13,8 +13,10 @@ import {
   estadoAnimoSchema,
   habitoRegistroSchema,
   habitoSchema,
+  logroSchema,
   perfilSchema,
   resumenDiaSchema,
+  usuarioLogroSchema,
 } from "../schemas";
 import type {
   ActividadNueva,
@@ -177,6 +179,24 @@ export async function eliminarActividad(cliente: ClienteDiarco, id: number) {
   comprobar(await cliente.from("actividades").delete().eq("id", id));
 }
 
+const actividadResumenSchema = actividadSchema.pick({ fecha: true, categoria_id: true, minutos: true });
+
+/** Actividades de un rango (solo los campos que usan estadísticas y logros). */
+export async function listarActividadesRango(cliente: ClienteDiarco, desde: Fecha, hasta: Fecha) {
+  return obtenerTodo(
+    (inicio, fin) =>
+      cliente
+        .from("actividades")
+        .select("fecha, categoria_id, minutos")
+        .gte("fecha", desde)
+        .lte("fecha", hasta)
+        .order("fecha")
+        .order("id")
+        .range(inicio, fin),
+    z.array(actividadResumenSchema),
+  );
+}
+
 // -----------------------------------------------------------------------------
 // Horario
 // -----------------------------------------------------------------------------
@@ -219,6 +239,14 @@ export async function obtenerAnimo(cliente: ClienteDiarco, fecha: Fecha) {
   );
 }
 
+/** Estados de ánimo de un rango. */
+export async function listarAnimoRango(cliente: ClienteDiarco, desde: Fecha, hasta: Fecha) {
+  return validar(
+    await cliente.from("estados_animo").select("*").gte("fecha", desde).lte("fecha", hasta).order("fecha"),
+    z.array(estadoAnimoSchema),
+  );
+}
+
 export async function guardarAnimo(cliente: ClienteDiarco, animo: EstadoAnimoNuevo) {
   return validar(
     await cliente
@@ -227,5 +255,29 @@ export async function guardarAnimo(cliente: ClienteDiarco, animo: EstadoAnimoNue
       .select("*")
       .single(),
     estadoAnimoSchema,
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Logros
+// -----------------------------------------------------------------------------
+export async function listarLogros(cliente: ClienteDiarco) {
+  return validar(await cliente.from("logros").select("*").order("id"), z.array(logroSchema));
+}
+
+export async function listarUsuarioLogros(cliente: ClienteDiarco) {
+  return validar(await cliente.from("usuario_logros").select("*"), z.array(usuarioLogroSchema));
+}
+
+/** Registra logros obtenidos; ignora los que ya estaban (no falla por duplicados). */
+export async function registrarLogros(cliente: ClienteDiarco, logroIds: number[]) {
+  if (logroIds.length === 0) return;
+  comprobar(
+    await cliente
+      .from("usuario_logros")
+      .upsert(
+        logroIds.map((logro_id) => ({ logro_id })),
+        { onConflict: "usuario_id,logro_id", ignoreDuplicates: true },
+      ),
   );
 }

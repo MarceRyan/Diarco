@@ -65,6 +65,9 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 - Colores: mandarina #ff6a2b (rachas), violeta #6741d9 (progreso), fondo blanco; modo oscuro obligatorio.
 - Tipografías: Sora (títulos) e Inter (texto).
 - Mobile first, botones de al menos 44 px, buen contraste, estados vacíos y de carga en cada pantalla.
+- Gráficos: una serie por gráfico con `--grafico`; mapa de calor con `--calor-1..4` (valores validados con la skill dataviz
+  en modo claro y oscuro: no cambiarlos sin volver a validar). Cada gráfico con tooltip y tabla "Ver datos".
+- Tema: sistema por defecto; el usuario puede forzar claro/oscuro (atributo `data-tema` en `<html>`, guardado en localStorage).
 
 ## Plan
 0. Estructura del monorepo y configuración base.

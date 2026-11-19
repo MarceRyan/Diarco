@@ -5,6 +5,7 @@ import {
   minutosPorCategoria,
   nivelIntensidad,
   promedioAnimo,
+  semanasCalendario,
   tasaCumplimiento,
 } from "../src";
 
@@ -59,6 +60,22 @@ describe("promedioAnimo", () => {
     expect(promedioAnimo([{ nivel: 4 }, { nivel: 5 }, { nivel: 3 }, { nivel: 4 }])).toBe(4);
     expect(promedioAnimo([{ nivel: 4 }, { nivel: 5 }, { nivel: 5 }])).toBe(4.7);
     expect(promedioAnimo([])).toBeNull();
+  });
+});
+
+describe("semanasCalendario", () => {
+  it("arma columnas de lunes a domingo con huecos fuera del rango", () => {
+    // Del miércoles 11 al martes 17 de noviembre de 2026.
+    expect(semanasCalendario("2026-11-11", "2026-11-17")).toEqual([
+      [null, null, "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14", "2026-11-15"],
+      ["2026-11-16", "2026-11-17", null, null, null, null, null],
+    ]);
+  });
+
+  it("un rango que empieza en lunes y termina en domingo no deja huecos", () => {
+    const semanas = semanasCalendario("2026-11-09", "2026-11-22");
+    expect(semanas).toHaveLength(2);
+    expect(semanas.flat().includes(null)).toBe(false);
   });
 });
 

@@ -23,18 +23,29 @@
   --exito: #2f9e44;
   --peligro: #c92a2a;
 
+  /* Gráficos (validados con el script de la skill dataviz). */
+  --grafico: #6741d9;
+  --calor-1: #a993ea;
+  --calor-2: #876ae2;
+  --calor-3: #6741d9;
+  --calor-4: #4a2ba6;
+
   color-scheme: light;
 }
 
+/*
+ * Modo oscuro: sigue al sistema salvo que el usuario elija un tema en
+ * Configuración (atributo data-tema en <html>). Los valores se repiten en
+ * los dos bloques porque uno vive dentro de una media query y el otro no.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="claro"]) {
     --fondo: #121114;
     --superficie: #1c1b20;
     --superficie-2: #26242b;
     --borde: #34313a;
     --texto: #f2f0f5;
     --texto-suave: #a9a5b2;
-
     --mandarina-texto: #ff8c5a;
     --mandarina-suave: #3a1f12;
     --violeta: #9b7ff0;
@@ -42,9 +53,35 @@
     --sobre-violeta: #121114;
     --exito: #51cf66;
     --peligro: #ff8a5c;
-
+    --grafico: #9378ec;
+    --calor-1: #4f4385;
+    --calor-2: #6b57b3;
+    --calor-3: #8a70de;
+    --calor-4: #ab95f6;
     color-scheme: dark;
   }
+}
+
+:root[data-tema="oscuro"] {
+  --fondo: #121114;
+  --superficie: #1c1b20;
+  --superficie-2: #26242b;
+  --borde: #34313a;
+  --texto: #f2f0f5;
+  --texto-suave: #a9a5b2;
+  --mandarina-texto: #ff8c5a;
+  --mandarina-suave: #3a1f12;
+  --violeta: #9b7ff0;
+  --violeta-suave: #2a2240;
+  --sobre-violeta: #121114;
+  --exito: #51cf66;
+  --peligro: #ff8a5c;
+  --grafico: #9378ec;
+  --calor-1: #4f4385;
+  --calor-2: #6b57b3;
+  --calor-3: #8a70de;
+  --calor-4: #ab95f6;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -62,6 +99,7 @@
   --color-sobre-violeta: var(--sobre-violeta);
   --color-exito: var(--exito);
   --color-peligro: var(--peligro);
+  --color-grafico: var(--grafico);
 
   --font-titulo: var(--font-sora);
   --font-sans: var(--font-inter);

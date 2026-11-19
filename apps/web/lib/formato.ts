@@ -18,6 +18,18 @@ export function fechaLarga(fecha: Fecha): string {
   return formatoLargo.format(aDate(fecha));
 }
 
+const formatoCorto = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", timeZone: "UTC" });
+
+/** "19 nov" */
+export function fechaCorta(fecha: Fecha): string {
+  return formatoCorto.format(aDate(fecha)).replace(".", "");
+}
+
+/** 0.756 → "76 %" */
+export function porcentaje(fraccion: number): string {
+  return `${Math.round(fraccion * 100)} %`;
+}
+
 /** "08:00:00" → "08:00" */
 export function horaCorta(hora: string): string {
   return hora.slice(0, 5);

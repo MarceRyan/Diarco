@@ -3,7 +3,8 @@
  * Las pantallas solo llaman a estos hooks; no consultan Supabase directamente.
  */
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { evaluarLogros, type CodigoLogro } from "../logic/logros";
 import * as api from "../api";
 import { ZONA_HORARIA_POR_DEFECTO } from "../constantes";
 import { fechaEnZona, fechaHoy, sumarDias } from "../logic/fechas";
@@ -11,6 +12,7 @@ import {
   calcularRachaGeneral,
   calcularRachaHabito,
   construirResumenDiario,
+  type DiaResumen,
   type RachaGeneral,
   type RachaHabito,
 } from "../logic/rachas";
@@ -170,6 +172,10 @@ export interface Rachas {
   general: RachaGeneral;
   /** Ids de hábitos con registro completado hoy. */
   completadosHoy: Set<number>;
+  /** Resumen por día de la historia consultada (base de la racha general). */
+  dias: DiaResumen[];
+  /** Total de registros completados en la historia consultada. */
+  totalCompletados: number;
 }
 
 /**
@@ -226,7 +232,13 @@ export function useRachas() {
       hasta: hoy,
     });
 
-    return { porHabito, general: calcularRachaGeneral({ dias, hoy }), completadosHoy };
+    return {
+      porHabito,
+      general: calcularRachaGeneral({ dias, hoy }),
+      completadosHoy,
+      dias,
+      totalCompletados: completados.data.length,
+    };
   }, [habitos.data, completados.data, perfil.data, hoy, zona]);
 
   return {
@@ -322,4 +334,131 @@ export function useAnimo(fecha: Fecha) {
 export function useGuardarAnimo() {
   const cliente = useObtenerCliente();
   return useMutacion((animo: EstadoAnimoNuevo) => api.guardarAnimo(cliente(), animo), [claves.animo]);
+}
+
+// -----------------------------------------------------------------------------
+// Estadísticas (rangos)
+// -----------------------------------------------------------------------------
+
+/** Rango [hoy - (dias - 1), hoy]: los últimos `dias` días incluyendo hoy. */
+export function useRango(dias: number): { desde: Fecha; hasta: Fecha } {
+  const hoy = useHoy();
+  return { desde: sumarDias(hoy, -(dias - 1)), hasta: hoy };
+}
+
+/** Días programados de cada hábito en el rango, con su cumplimiento (RPC). */
+export function useCumplimiento(desde: Fecha, hasta: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.cumplimientoRango(desde, hasta),
+    queryFn: () => api.obtenerCumplimiento(cliente(), desde, hasta),
+  });
+}
+
+/** Resumen por día (RPC) de un rango explícito. */
+export function useResumenRango(desde: Fecha, hasta: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.resumenRango(desde, hasta),
+    queryFn: () => api.obtenerResumenDiario(cliente(), desde, hasta),
+  });
+}
+
+export function useActividadesRango(desde: Fecha, hasta: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.actividadesRango(desde, hasta),
+    queryFn: () => api.listarActividadesRango(cliente(), desde, hasta),
+  });
+}
+
+export function useAnimoRango(desde: Fecha, hasta: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.animoRango(desde, hasta),
+    queryFn: () => api.listarAnimoRango(cliente(), desde, hasta),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Logros
+// -----------------------------------------------------------------------------
+
+/** Días hacia atrás que se revisan para los logros de constancia (bitácora y ánimo). */
+export const DIAS_REVISION_LOGROS = 90;
+
+/** Catálogo de logros con la fecha en que el usuario obtuvo cada uno (o null). */
+export function useLogros() {
+  const cliente = useObtenerCliente();
+  const catalogo = useQuery({
+    queryKey: claves.logros,
+    queryFn: () => api.listarLogros(cliente()),
+    staleTime: Infinity, // el catálogo casi nunca cambia
+  });
+  const obtenidos = useQuery({ queryKey: claves.usuarioLogros, queryFn: () => api.listarUsuarioLogros(cliente()) });
+
+  const data = useMemo(() => {
+    if (!catalogo.data || !obtenidos.data) return undefined;
+    const fechas = new Map(obtenidos.data.map((u) => [u.logro_id, u.obtenido_en]));
+    return catalogo.data.map((logro) => ({ ...logro, obtenido_en: fechas.get(logro.id) ?? null }));
+  }, [catalogo.data, obtenidos.data]);
+
+  return {
+    data,
+    isPending: catalogo.isPending || obtenidos.isPending,
+    error: catalogo.error ?? obtenidos.error,
+    refetch: () => Promise.all([catalogo.refetch(), obtenidos.refetch()]),
+  };
+}
+
+/**
+ * Evalúa el historial del usuario y registra los logros nuevos.
+ * Se monta una vez en la app; `onNuevos` recibe los logros recién obtenidos
+ * (para mostrar un aviso). La regla de cada logro vive en logic/logros.ts.
+ */
+export function useVigilanteLogros(onNuevos: (logros: { codigo: CodigoLogro; nombre: string }[]) => void) {
+  const cliente = useObtenerCliente();
+  const qc = useQueryClient();
+  const hoy = useHoy();
+  const { data: rachas } = useRachas();
+  const logros = useLogros();
+  const rango = { desde: sumarDias(hoy, -(DIAS_REVISION_LOGROS - 1)), hasta: hoy };
+  const actividades = useActividadesRango(rango.desde, rango.hasta);
+  const animo = useAnimoRango(rango.desde, rango.hasta);
+  // Códigos ya enviados en esta sesión: evita registrar dos veces mientras llega la respuesta.
+  const enviados = useRef(new Set<string>());
+  const avisar = useRef(onNuevos);
+  useEffect(() => {
+    avisar.current = onNuevos;
+  });
+
+  useEffect(() => {
+    if (!rachas || !logros.data || !actividades.data || !animo.data) return;
+
+    const cumplidos = evaluarLogros({
+      totalCompletados: rachas.totalCompletados,
+      mejorRacha: Math.max(0, ...[...rachas.porHabito.values()].map((r) => r.maxima)),
+      resumenDiario: rachas.dias,
+      fechasActividades: actividades.data.map((a) => a.fecha),
+      fechasAnimo: animo.data.map((a) => a.fecha),
+      hoy,
+    });
+
+    const nuevos = logros.data.filter(
+      (l) => l.obtenido_en === null && cumplidos.includes(l.codigo as CodigoLogro) && !enviados.current.has(l.codigo),
+    );
+    if (nuevos.length === 0) return;
+
+    nuevos.forEach((l) => enviados.current.add(l.codigo));
+    api
+      .registrarLogros(cliente(), nuevos.map((l) => l.id))
+      .then(() => {
+        avisar.current(nuevos.map((l) => ({ codigo: l.codigo as CodigoLogro, nombre: l.nombre })));
+        return qc.invalidateQueries({ queryKey: claves.usuarioLogros });
+      })
+      .catch(() => {
+        // Se reintentará en la próxima evaluación.
+        nuevos.forEach((l) => enviados.current.delete(l.codigo));
+      });
+  }, [rachas, logros.data, actividades.data, animo.data, hoy, cliente, qc]);
 }
