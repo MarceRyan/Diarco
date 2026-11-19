@@ -4,6 +4,7 @@ import { DIAS_PARA_DORMIR, diaSemana, ETAPAS_CHISPA, type Estacion } from "@diar
 import { useEvolucionChispa } from "@diarco/shared/hooks";
 import { CalendarCheck, Flame } from "lucide-react";
 import { ChispaEvolutiva } from "./chispa-evolutiva";
+import { ChispaViva } from "./chispa-viva";
 import { claseTarjeta, Esqueleto, MensajeError } from "./ui/estados";
 import { fechaCorta } from "@/lib/formato";
 
@@ -18,6 +19,36 @@ const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "
 
 /** Etapas que llevan artículo masculino ("un fueguito", "un volcán"). */
 const ETAPAS_MASCULINAS = new Set<string>(["Fueguito", "Volcán"]);
+
+const FRASE_ESTACION: Record<Estacion, string> = {
+  primavera: "¡Huele a primavera! 🌸",
+  verano: "¡Qué calorcito! 😎",
+  otono: "Me encanta mi bufanda 🍂",
+  invierno: "Brrr… ¡abrígame con leña! ❄️",
+};
+
+/** Lo que Chispa dice al tocarla en Progreso. */
+function frasesProgreso({
+  lena,
+  faltan,
+  siguiente,
+  estacion,
+  dormida,
+}: {
+  lena: number;
+  faltan: number;
+  siguiente: string | undefined;
+  estacion: Estacion;
+  dormida: boolean;
+}): string[] {
+  if (dormida) return ["Zzz… 😴", "Un hábito cumplido me despierta", "Zzz… sueño con leña 🪵"];
+  return [
+    lena > 0 ? `¡Gracias por ${lena === 1 ? "el leño" : `los ${lena} leños`}! 🪵` : "¡Hola! Dame leña y verás 🔥",
+    siguiente ? `${faltan === 1 ? "Me falta 1 leño" : `Me faltan ${faltan} leños`} para ser ${siguiente.toLowerCase()}` : "¡Ya soy una estrella! ⭐",
+    FRASE_ESTACION[estacion],
+    "¡Cada hábito me hace crecer!",
+  ];
+}
 
 /** Chispa crece con tu leña: escena, etapa, avance y cómo ganar más. */
 export function TuChispa() {
@@ -34,7 +65,21 @@ export function TuChispa() {
     <section aria-labelledby="titulo-chispa" className={`${claseTarjeta} grid overflow-hidden md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]`}>
       {/* Escenario con el color de la estación */}
       <div className={`flex items-end justify-center ${est.fondo} px-4 pt-4`}>
-        <ChispaEvolutiva etapa={etapa.numero} estacion={estacion} dormida={dormida} tamano={240} />
+        <ChispaViva
+          moverCaja={false}
+          frases={frasesProgreso({ lena, faltan, siguiente: etapa.siguiente?.nombre, estacion, dormida })}
+        >
+          {({ emocionada, toques }) => (
+            <ChispaEvolutiva
+              etapa={etapa.numero}
+              estacion={estacion}
+              dormida={dormida}
+              emocionada={emocionada}
+              toques={toques}
+              tamano={240}
+            />
+          )}
+        </ChispaViva>
       </div>
 
       <div className="space-y-4 p-5 sm:p-6">

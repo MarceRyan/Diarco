@@ -222,6 +222,86 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Chispa viva: la llama titila, parpadea, mira al puntero y reacciona al tocarla.
+   --------------------------------------------------------------------------- */
+@keyframes llama {
+  0%, 100% { transform: scale(1, 1) skewX(0deg); }
+  30% { transform: scale(1.03, 0.96) skewX(-2.5deg); }
+  65% { transform: scale(0.97, 1.05) skewX(2deg); }
+}
+@keyframes parpadeo {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+@keyframes meneo {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(-6deg) translateY(-3px); }
+  75% { transform: rotate(6deg) translateY(-3px); }
+}
+@keyframes salto {
+  0% { transform: translateY(0) scale(1, 1); }
+  20% { transform: translateY(2%) scale(1.12, 0.88); }
+  45% { transform: translateY(-22%) scale(0.92, 1.1); }
+  70% { transform: translateY(0) scale(1.1, 0.9); }
+  85% { transform: translateY(-4%) scale(0.98, 1.02); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+@keyframes subir {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-26px); opacity: 0; }
+}
+@keyframes latido {
+  0%, 100% { opacity: 0.35; transform: scale(0.96) rotate(0deg); }
+  50% { opacity: 0.55; transform: scale(1.04) rotate(6deg); }
+}
+
+.chispa-llama,
+.chispa-nucleo,
+.chispa-parpadeo,
+.chispa-subir,
+.chispa-latido,
+.chispa-meneo,
+.chispa-salto {
+  transform-box: fill-box;
+}
+.chispa-llama {
+  transform-origin: 50% 100%;
+  animation: llama 1.7s ease-in-out infinite;
+}
+.chispa-nucleo {
+  transform-origin: 50% 100%;
+  animation: llama 1.1s ease-in-out infinite reverse;
+}
+.chispa-parpadeo {
+  transform-origin: 50% 50%;
+  animation: parpadeo 4.6s ease-in-out infinite;
+}
+/* Los ojos siguen al puntero: --mx y --my (de -1 a 1) los pone ChispaViva. */
+.chispa-mirada {
+  transform: translate(calc(var(--mx, 0) * 3.5px), calc(var(--my, 0) * 2.5px));
+  transition: transform 140ms ease-out;
+}
+.chispa-meneo {
+  transform-origin: 50% 100%;
+  animation: meneo 0.9s ease-in-out infinite;
+}
+.chispa-salto {
+  transform-origin: 50% 100%;
+  animation: salto 640ms cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+.chispa-subir {
+  animation: subir 2.4s ease-out infinite;
+}
+.chispa-latido {
+  transform-origin: 50% 50%;
+  animation: latido 3.6s ease-in-out infinite;
+}
+.chispa-estallido {
+  animation: confeti 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 body {
   background: var(--fondo);
   color: var(--texto);

@@ -21,15 +21,18 @@ const NOMBRE_ESTACION: Record<Estacion, string> = {
   invierno: "invierno",
 };
 
-/** Llama lateral simple (detrás de Chispa). */
-function LlamaLateral({ x, escala, color }: { x: number; escala: number; color: string }) {
+/** Llama lateral simple (detrás de Chispa), titilando a su propio ritmo. */
+function LlamaLateral({ x, escala, color, ritmo }: { x: number; escala: number; color: string; ritmo: string }) {
   return (
-    <path
-      transform={`translate(${x} ${170 - 60 * escala}) scale(${escala})`}
-      d="M20 0 C26 14 40 24 40 42 C40 54 31 60 20 60 C9 60 0 54 0 42 C0 30 12 22 20 0 Z"
-      fill={color}
-      opacity="0.85"
-    />
+    <g transform={`translate(${x} ${170 - 60 * escala}) scale(${escala})`}>
+      <path
+        className="chispa-llama"
+        style={{ animationDuration: ritmo }}
+        d="M20 0 C26 14 40 24 40 42 C40 54 31 60 20 60 C9 60 0 54 0 42 C0 30 12 22 20 0 Z"
+        fill={color}
+        opacity="0.85"
+      />
+    </g>
   );
 }
 
@@ -37,12 +40,18 @@ export function ChispaEvolutiva({
   etapa,
   estacion,
   dormida = false,
+  emocionada = false,
+  toques = 0,
   tamano = 220,
 }: {
   /** 1 a 10 */
   etapa: number;
   estacion: Estacion;
   dormida?: boolean;
+  /** Puntero encima: abre la boca y se le encienden las mejillas. */
+  emocionada?: boolean;
+  /** Veces que la tocaron: cada toque hace saltar solo a Chispa (no la escena). */
+  toques?: number;
   tamano?: number;
 }) {
   const e = Math.min(Math.max(etapa, 1), 10);
@@ -68,6 +77,7 @@ export function ChispaEvolutiva({
       {/* Halo de estrella (etapa 10) */}
       {e === 10 && !dormida && (
         <polygon
+          className="chispa-latido"
           points="100,8 118,62 175,62 129,95 146,150 100,117 54,150 71,95 25,62 82,62"
           fill="var(--amarillo)"
           opacity="0.45"
@@ -100,34 +110,47 @@ export function ChispaEvolutiva({
       {/* Llamas laterales (desde el fueguito) */}
       {e >= 3 && !dormida && !volcan && (
         <>
-          <LlamaLateral x={100 - ancho / 2 - 22} escala={0.55 + e * 0.03} color={colores.exterior} />
-          <LlamaLateral x={100 + ancho / 2 - 12} escala={0.5 + e * 0.03} color={colores.exterior} />
+          <LlamaLateral x={100 - ancho / 2 - 22} escala={0.55 + e * 0.03} color={colores.exterior} ritmo="1.4s" />
+          <LlamaLateral x={100 + ancho / 2 - 12} escala={0.5 + e * 0.03} color={colores.exterior} ritmo="1.9s" />
         </>
       )}
 
       {/* Chispa */}
       <g transform={`translate(${x} ${y}) scale(${escala})`}>
         <g className={dormida ? "" : "animate-flotar"} style={{ transformOrigin: "50px 108px" }}>
-          <CuerpoChispa
-            estado={dormida ? "dormida" : e >= 5 ? "celebrando" : "feliz"}
-            exterior={colores.exterior}
-            interior={colores.interior}
-            accesorio={estacion}
-          />
+          {/* key: cada toque reinicia el salto */}
+          <g key={toques} className={toques > 0 ? "chispa-salto" : undefined}>
+            <g className={emocionada ? "chispa-meneo" : undefined}>
+              <CuerpoChispa
+                estado={dormida ? "dormida" : emocionada ? "emocionada" : "feliz"}
+                exterior={colores.exterior}
+                interior={colores.interior}
+                accesorio={estacion}
+                viva
+              />
+            </g>
+          </g>
         </g>
       </g>
 
-      {/* Chispas flotando (desde la hoguera) */}
+      {/* Chispas que suben (desde la hoguera), cada una con su retraso */}
       {e >= 5 && !dormida && (
         <g fill={colores.interior}>
           {[
-            [48, 70, 3],
-            [150, 60, 2.5],
-            [62, 40, 2],
-            [140, 100, 3],
-            [100, 22, 2.5],
-          ].map(([cx, cy, r]) => (
-            <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={r} />
+            [48, 70, 3, 0],
+            [150, 60, 2.5, 0.6],
+            [62, 40, 2, 1.2],
+            [140, 100, 3, 1.8],
+            [100, 22, 2.5, 0.9],
+          ].map(([cx, cy, r, retraso]) => (
+            <circle
+              key={`${cx}-${cy}`}
+              className="chispa-subir"
+              style={{ animationDelay: `${retraso}s` }}
+              cx={cx}
+              cy={cy}
+              r={r}
+            />
           ))}
         </g>
       )}

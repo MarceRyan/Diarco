@@ -29,7 +29,8 @@ import { AnotarRapido } from "@/components/hoy/anotar-rapido";
 import { Enfoque } from "@/components/hoy/enfoque";
 import { SemanaRacha } from "@/components/hoy/semana-racha";
 import { ChipCategoria } from "@/components/categorias";
-import { Chispa, estadoChispa } from "@/components/chispa";
+import { Chispa, estadoChispa, type EstadoChispa } from "@/components/chispa";
+import { ChispaViva } from "@/components/chispa-viva";
 import { Confeti } from "@/components/confeti";
 import { NotaHabito } from "@/components/nota-habito";
 import { InsigniaRacha } from "@/components/racha";
@@ -90,6 +91,29 @@ export function PantallaHoy() {
 // -----------------------------------------------------------------------------
 // Tarjeta principal: Chispa + racha general + progreso del día + protector
 // -----------------------------------------------------------------------------
+
+/** Lo que Chispa dice al tocarla en Hoy, según cómo va el día. */
+function frasesHoy(
+  estado: EstadoChispa,
+  { actual, faltan, proximo }: { actual: number; faltan: number; proximo: number | null },
+): string[] {
+  const meta = proximo ? `¡A ${proximo - actual} ${proximo - actual === 1 ? "día" : "días"} de tu próxima meta!` : "¡Eres imparable!";
+  switch (estado) {
+    case "celebrando":
+      return ["¡Día perfecto! 🎉", "¡Choca esos cinco! ✋", meta, "Hoy brillo más que nunca ✨"];
+    case "dormida":
+      return ["Zzz… 😴", "¡Despiértame con un hábito!", "Un hábito hoy y vuelvo a brillar 🔥"];
+    case "preocupada":
+      return [
+        `¡Aún estás a tiempo! ${faltan === 1 ? "Falta 1 hábito" : `Faltan ${faltan} hábitos`}`,
+        "No dejemos que se apague 🙏",
+        "¡Tú puedes! 💪",
+      ];
+    default:
+      return ["¡Hola! 👋", "¡Vamos con todo hoy! 💪", meta, "Cada hábito me da energía 🔥"];
+  }
+}
+
 function TarjetaRacha() {
   const { data: rachas, isPending } = useRachas();
   const { data: habitos } = useHabitos();
@@ -106,6 +130,7 @@ function TarjetaRacha() {
   const diaCompleto = total > 0 && hechos === total;
   const proximo = siguienteHito(actual);
   const porcentaje = total > 0 ? Math.round((hechos / total) * 100) : 0;
+  const estado = estadoChispa(actual, { enRiesgo: actual > 0 && total > 0 && !cumpleHoy, diaCompleto });
 
   const titulo =
     actual === 0 ? "¡Enciende tu racha hoy!" : actual === 1 ? "¡Primer día de racha!" : `¡${actual} días seguidos!`;
@@ -131,11 +156,11 @@ function TarjetaRacha() {
   return (
     <section aria-labelledby="titulo-racha" className={`${claseTarjeta} overflow-hidden`}>
       <div className="flex items-center gap-4 bg-mandarina-suave px-5 pt-5 pb-4 sm:gap-6 sm:px-6">
-        <Chispa
-          estado={estadoChispa(actual, { enRiesgo: actual > 0 && total > 0 && !cumpleHoy, diaCompleto })}
-          tamano={88}
-          className="shrink-0"
-        />
+        <ChispaViva globo="derecha" className="shrink-0" frases={frasesHoy(estado, { actual, faltan, proximo })}>
+          {({ emocionada }) => (
+            <Chispa estado={emocionada && estado !== "dormida" && estado !== "celebrando" ? "emocionada" : estado} tamano={88} />
+          )}
+        </ChispaViva>
         <div className="min-w-0">
           <h2 id="titulo-racha" className="font-titulo text-3xl leading-tight font-extrabold text-mandarina-texto sm:text-4xl">
             {titulo}

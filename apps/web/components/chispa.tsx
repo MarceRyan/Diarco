@@ -2,13 +2,16 @@
  * Chispa: la racha hecha personaje. Una llamita de formas geométricas cuyo
  * gesto cambia con el estado de la racha. El cuerpo (CuerpoChispa) se puede
  * recolorear y vestir, para las etapas y estaciones de ChispaEvolutiva.
+ * Con `viva`, la llama titila y parpadea; sus ojos siguen al puntero cuando
+ * está dentro de ChispaViva (variables CSS --mx / --my).
  */
 import type { Estacion } from "@diarco/shared";
 
-export type EstadoChispa = "feliz" | "celebrando" | "preocupada" | "dormida";
+export type EstadoChispa = "feliz" | "emocionada" | "celebrando" | "preocupada" | "dormida";
 
 const DESCRIPCION: Record<EstadoChispa, string> = {
   feliz: "Chispa, la llamita de tu racha, está contenta",
+  emocionada: "Chispa está emocionada de verte",
   celebrando: "Chispa está celebrando",
   preocupada: "Chispa está preocupada: tu racha está en riesgo",
   dormida: "Chispa está dormida: tu racha está apagada",
@@ -26,24 +29,31 @@ export function CuerpoChispa({
   exterior = "var(--mandarina)",
   interior = "var(--amarillo)",
   accesorio,
+  viva = false,
 }: {
   estado?: EstadoChispa;
   exterior?: string;
   interior?: string;
   accesorio?: Estacion;
+  /** Llama que titila y ojos que parpadean. */
+  viva?: boolean;
 }) {
   const apagada = estado === "dormida";
   const tinta = apagada ? "var(--texto)" : CARA;
+  const animar = viva && !apagada;
+  const ojosAbiertos = estado === "feliz" || estado === "emocionada";
 
   return (
     <g>
       {/* Llama exterior */}
       <path
+        className={animar ? "chispa-llama" : undefined}
         d="M50 4 C61 20 86 36 86 68 C86 90 70 104 50 104 C30 104 14 90 14 68 C14 51 23 41 30 31 C32 43 37 49 43 51 C39 33 42 18 50 4 Z"
         style={{ fill: apagada ? "var(--borde-fuerte)" : exterior }}
       />
       {/* Llama interior */}
       <path
+        className={animar ? "chispa-nucleo" : undefined}
         d="M50 40 C58 52 72 62 72 78 C72 92 62 100 50 100 C38 100 28 92 28 78 C28 64 42 56 50 40 Z"
         style={{ fill: apagada ? "var(--superficie-2)" : interior }}
       />
@@ -57,37 +67,51 @@ export function CuerpoChispa({
         </g>
       )}
 
-      {/* Mejillas */}
+      {/* Mejillas (más rosadas cuando está emocionada) */}
       {!apagada && (
         <>
-          <ellipse cx="33" cy="82" rx="5" ry="3.2" fill="#ff8fa3" opacity="0.75" />
-          <ellipse cx="67" cy="82" rx="5" ry="3.2" fill="#ff8fa3" opacity="0.75" />
+          <ellipse cx="33" cy="82" rx="5" ry="3.2" fill="#ff8fa3" opacity={estado === "emocionada" ? 1 : 0.75} />
+          <ellipse cx="67" cy="82" rx="5" ry="3.2" fill="#ff8fa3" opacity={estado === "emocionada" ? 1 : 0.75} />
         </>
       )}
 
-      {/* Ojos */}
-      {estado === "feliz" && accesorio !== "verano" && (
-        <>
-          <circle cx="40" cy="72" r="5" fill={CARA} />
-          <circle cx="60" cy="72" r="5" fill={CARA} />
-          <circle cx="41.8" cy="70.2" r="1.7" fill="#fff" />
-          <circle cx="61.8" cy="70.2" r="1.7" fill="#fff" />
-        </>
-      )}
-      {estado === "preocupada" && accesorio !== "verano" && (
-        <>
-          <circle cx="40" cy="73" r="4.6" fill={CARA} />
-          <circle cx="60" cy="73" r="4.6" fill={CARA} />
-          <path d="M33 63 L45 66" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
-          <path d="M67 63 L55 66" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
-        </>
-      )}
-      {estado === "celebrando" && accesorio !== "verano" && (
-        <>
-          <path d="M34 73 Q40 65 46 73" fill="none" stroke={CARA} strokeWidth="3.5" strokeLinecap="round" />
-          <path d="M54 73 Q60 65 66 73" fill="none" stroke={CARA} strokeWidth="3.5" strokeLinecap="round" />
-        </>
-      )}
+      {/* Ojos: siguen al puntero (chispa-mirada) y parpadean */}
+      <g className="chispa-mirada">
+        {ojosAbiertos && accesorio !== "verano" && (
+          <g className={animar ? "chispa-parpadeo" : undefined}>
+            <circle cx="40" cy="72" r={estado === "emocionada" ? 5.8 : 5} fill={CARA} />
+            <circle cx="60" cy="72" r={estado === "emocionada" ? 5.8 : 5} fill={CARA} />
+            <circle cx="41.8" cy="70.2" r="1.9" fill="#fff" />
+            <circle cx="61.8" cy="70.2" r="1.9" fill="#fff" />
+          </g>
+        )}
+        {estado === "preocupada" && accesorio !== "verano" && (
+          <>
+            <g className={animar ? "chispa-parpadeo" : undefined}>
+              <circle cx="40" cy="73" r="4.6" fill={CARA} />
+              <circle cx="60" cy="73" r="4.6" fill={CARA} />
+            </g>
+            <path d="M33 63 L45 66" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
+            <path d="M67 63 L55 66" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
+          </>
+        )}
+        {estado === "celebrando" && accesorio !== "verano" && (
+          <>
+            <path d="M34 73 Q40 65 46 73" fill="none" stroke={CARA} strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M54 73 Q60 65 66 73" fill="none" stroke={CARA} strokeWidth="3.5" strokeLinecap="round" />
+          </>
+        )}
+
+        {/* Lentes de sol de verano (en lugar de los ojos, salvo dormida) */}
+        {accesorio === "verano" && !apagada && (
+          <g>
+            <rect x="31" y="66" width="17" height="11" rx="5" fill={CARA} />
+            <rect x="52" y="66" width="17" height="11" rx="5" fill={CARA} />
+            <path d="M48 70 L52 70" stroke={CARA} strokeWidth="2.5" />
+            <path d="M34 69 L40 69" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity="0.7" />
+          </g>
+        )}
+      </g>
       {estado === "dormida" && (
         <>
           <path d="M34 73 Q40 77 46 73" fill="none" stroke={tinta} strokeWidth="3" strokeLinecap="round" />
@@ -95,19 +119,11 @@ export function CuerpoChispa({
         </>
       )}
 
-      {/* Lentes de sol de verano (en lugar de los ojos, salvo dormida) */}
-      {accesorio === "verano" && !apagada && (
-        <g>
-          <rect x="31" y="66" width="17" height="11" rx="5" fill={CARA} />
-          <rect x="52" y="66" width="17" height="11" rx="5" fill={CARA} />
-          <path d="M48 70 L52 70" stroke={CARA} strokeWidth="2.5" />
-          <path d="M34 69 L40 69" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" opacity="0.7" />
-        </g>
-      )}
-
       {/* Boca */}
       {estado === "feliz" && <path d="M43 82 Q50 89 57 82" fill="none" stroke={CARA} strokeWidth="3.2" strokeLinecap="round" />}
-      {estado === "celebrando" && <path d="M41 80 Q50 80 59 80 Q57 93 50 93 Q43 93 41 80 Z" fill={CARA} />}
+      {(estado === "celebrando" || estado === "emocionada") && (
+        <path d="M41 80 Q50 80 59 80 Q57 93 50 93 Q43 93 41 80 Z" fill={CARA} />
+      )}
       {estado === "preocupada" && (
         <path d="M44 87 Q47 84 50 87 Q53 90 56 87" fill="none" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
       )}
@@ -157,7 +173,7 @@ export function Chispa({
       className={`${animada && !apagada ? "animate-flotar" : ""} ${className}`}
       style={{ transformOrigin: "50% 100%" }}
     >
-      <CuerpoChispa estado={estado} />
+      <CuerpoChispa estado={estado} viva={animada} />
     </svg>
   );
 }
