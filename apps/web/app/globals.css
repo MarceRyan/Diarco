@@ -280,7 +280,7 @@
 }
 /* Los ojos siguen al puntero: --mx y --my (de -1 a 1) los pone ChispaViva. */
 .chispa-mirada {
-  transform: translate(calc(var(--mx, 0) * 3.5px), calc(var(--my, 0) * 2.5px));
+  transform: translate(calc(var(--mx, 0) * 2.6px), calc(var(--my, 0) * 2.2px));
   transition: transform 140ms ease-out;
 }
 .chispa-meneo {

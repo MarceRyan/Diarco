@@ -6,7 +6,7 @@ import { CalendarCheck, ChevronRight, Flame } from "lucide-react";
 import Link from "next/link";
 import { claseTarjeta, Esqueleto, MensajeError } from "../ui/estados";
 import { DESBLOQUEOS } from "./fondo";
-import { EscenaChispa } from "./escena";
+import { EscenaViva } from "./escena-viva";
 import { fechaCorta } from "@/lib/formato";
 
 const ESTACIONES: Record<Estacion, { nombre: string; emoji: string }> = {
@@ -72,7 +72,7 @@ export function CasaChispa() {
     <div className="space-y-8">
       <section aria-labelledby="titulo-chispa" className={`${claseTarjeta} overflow-hidden`}>
         <div className="relative">
-          <EscenaChispa
+          <EscenaViva
             etapa={etapa.numero}
             estacion={estacion}
             dormida={dormida}
@@ -244,7 +244,7 @@ export function VentanaChispa() {
       href="/chispa"
       className={`${claseTarjeta} group block overflow-hidden transition-transform hover:-translate-y-0.5`}
     >
-      <EscenaChispa etapa={etapa.numero} estacion={estacion} dormida={dormida} compacta className="h-36" />
+      <EscenaViva etapa={etapa.numero} estacion={estacion} dormida={dormida} compacta className="h-36" />
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="min-w-0 flex-1">
           <p className="font-titulo text-lg leading-tight font-extrabold">La casa de Chispa</p>

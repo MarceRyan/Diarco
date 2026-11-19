@@ -55,6 +55,15 @@ function suscribirMovimiento(aviso: () => void) {
 }
 const movimientoReducido = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/** Momento del día del usuario (el servidor asume "dia"). */
+export function useMomento() {
+  return useSyncExternalStore(suscribirMinuto, momentoActual, () => "dia" as Momento);
+}
+/** true si el sistema pide reducir movimiento. */
+export function useMovimientoReducido() {
+  return useSyncExternalStore(suscribirMovimiento, movimientoReducido, () => false);
+}
+
 const azar = (min: number, max: number) => min + Math.random() * (max - min);
 
 /** Orienta los ojos (salvo que el puntero se haya movido cerca hace poco: entonces lo mira a él). */
@@ -83,8 +92,8 @@ export function EscenaChispa({
   const escala = ESCALA[e - 1]! * (compacta ? 0.9 : 1);
   const colores = COLORES[e] ?? { exterior: "var(--mandarina)", interior: "var(--amarillo)" };
   const hayFogata = e >= 4;
-  const momento = useSyncExternalStore(suscribirMinuto, momentoActual, () => "dia" as Momento);
-  const reducir = useSyncExternalStore(suscribirMovimiento, movimientoReducido, () => false);
+  const momento = useMomento();
+  const reducir = useMovimientoReducido();
 
   const cajaRef = useRef<HTMLDivElement>(null);
   const chispaRef = useRef<SVGGElement>(null);
