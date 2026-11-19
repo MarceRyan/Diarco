@@ -7,7 +7,7 @@ import { useState, type FormEvent } from "react";
 import { z } from "zod";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campos";
-import { EstadoVacio, MensajeError } from "@/components/ui/estados";
+import { MensajeError } from "@/components/ui/estados";
 import { erroresPorCampo } from "@/lib/formularios";
 import { crearClienteNavegador } from "@/lib/supabase/cliente";
 
@@ -66,20 +66,25 @@ export function FormularioRegistro() {
 
   if (revisarCorreo) {
     return (
-      <EstadoVacio
-        icono={<MailCheck className="size-6" />}
-        titulo="Revisa tu correo"
-        descripcion="Te enviamos un enlace para confirmar tu cuenta. Ábrelo y volverás a Diarco con la sesión iniciada."
-      />
+      <div className="flex flex-col items-center gap-3 text-center" role="status">
+        <span className="flex size-16 items-center justify-center rounded-3xl bg-verde-suave text-verde-texto" aria-hidden>
+          <MailCheck className="size-8" strokeWidth={2.5} />
+        </span>
+        <h1 className="font-titulo text-3xl font-extrabold">¡Revisa tu correo!</h1>
+        <p className="text-texto-suave">
+          Te enviamos un enlace para confirmar tu cuenta. Ábrelo y volverás a Diarco con todo listo para empezar.
+        </p>
+        <p className="text-sm text-texto-suave">¿No llega? Mira en la carpeta de spam.</p>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-4" noValidate>
-      <h1 className="font-titulo text-2xl font-bold">Crear cuenta</h1>
+    <form onSubmit={enviar} className="space-y-5" noValidate>
+      <h1 className="text-center font-titulo text-3xl font-extrabold">Empecemos tu racha</h1>
       {error && <MensajeError error={new Error(error)} />}
-      <Campo etiqueta="Nombre" name="nombre" autoComplete="given-name" error={errores.nombre} />
-      <Campo etiqueta="Correo" name="email" type="email" autoComplete="email" error={errores.email} />
+      <Campo etiqueta="¿Cómo te llamas?" name="nombre" autoComplete="given-name" placeholder="Tu nombre" error={errores.nombre} />
+      <Campo etiqueta="Correo" name="email" type="email" autoComplete="email" placeholder="tu@correo.com" error={errores.email} />
       <Campo
         etiqueta="Contraseña"
         name="password"
@@ -88,12 +93,12 @@ export function FormularioRegistro() {
         ayuda="Mínimo 8 caracteres."
         error={errores.password}
       />
-      <Boton type="submit" cargando={cargando} className="w-full">
-        Crear cuenta
+      <Boton type="submit" grande cargando={cargando} className="w-full">
+        Crear mi cuenta
       </Boton>
-      <p className="text-center text-sm text-texto-suave">
+      <p className="text-center text-texto-suave">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="inline-block py-3 font-semibold text-violeta">
+        <Link href="/login" className="inline-block py-3 font-extrabold text-violeta-texto">
           Inicia sesión
         </Link>
       </p>

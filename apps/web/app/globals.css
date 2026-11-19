@@ -1,29 +1,56 @@
 @import "tailwindcss";
 
 /*
- * Tokens de diseño de Diarco.
- * Los colores se definen como variables CSS y cambian solos en modo oscuro
- * (según la preferencia del sistema). En los componentes se usan como clases
- * de Tailwind: bg-fondo, text-texto, bg-mandarina, border-borde, etc.
+ * Diarco · "Fiesta de colores"
+ * Fondo lavanda con tarjetas blancas de borde grueso y "labio" inferior;
+ * botones gorditos que se hunden al tocarlos. Cada color tiene un rol:
+ *   mandarina = racha · violeta = progreso y acción · verde = hecho
+ *   amarillo = logros · cielo = horario · peligro = borrar / errores
+ * Cada color trae: base (relleno), labio (borde 3D), suave (fondo) y texto
+ * (variante con contraste AA para usar como color de letra).
  */
 :root {
-  --fondo: #ffffff;
-  --superficie: #f7f6f3;
-  --superficie-2: #efede8;
-  --borde: #e4e1da;
-  --texto: #1c1b1f;
-  --texto-suave: #5f5c66;
+  --fondo: #f6f4fd;
+  --tarjeta: #ffffff;
+  --superficie: #efecfa;
+  --superficie-2: #e4dff5;
+  --borde: #e0daf2;
+  --borde-fuerte: #cdc4ea;
+  --texto: #2a2342;
+  --texto-suave: #655d80;
 
   --mandarina: #ff6a2b;
-  --mandarina-texto: #c2410c; /* variante con contraste AA sobre fondo claro */
-  --mandarina-suave: #fff0e8;
-  --violeta: #6741d9;
-  --violeta-suave: #efeafd;
-  --sobre-violeta: #ffffff; /* texto sobre botones violeta */
-  --exito: #2f9e44;
-  --peligro: #c92a2a;
+  --mandarina-labio: #d94e14;
+  --mandarina-suave: #ffeadf;
+  --mandarina-texto: #b93f0a;
 
-  /* Gráficos (validados con el script de la skill dataviz). */
+  --violeta: #6741d9;
+  --violeta-labio: #4a2bad;
+  --violeta-suave: #ece6ff;
+  --violeta-texto: #5532c4;
+  --sobre-violeta: #ffffff;
+
+  --verde: #17a362;
+  --verde-labio: #10804c;
+  --verde-suave: #dcf5e8;
+  --verde-texto: #0f7444;
+
+  --amarillo: #ffc23d;
+  --amarillo-labio: #dc9a10;
+  --amarillo-suave: #fff3d1;
+  --amarillo-texto: #845500;
+
+  --cielo: #2f9ff0;
+  --cielo-labio: #1a7fc9;
+  --cielo-suave: #e0f1fd;
+  --cielo-texto: #0d639d;
+
+  --peligro: #e03131;
+  --peligro-labio: #b02525;
+  --peligro-suave: #ffe5e5;
+  --peligro-texto: #b02525;
+
+  /* Gráficos (validados con la skill dataviz). */
   --grafico: #6741d9;
   --calor-1: #a993ea;
   --calor-2: #876ae2;
@@ -34,25 +61,44 @@
 }
 
 /*
- * Modo oscuro: sigue al sistema salvo que el usuario elija un tema en
- * Configuración (atributo data-tema en <html>). Los valores se repiten en
- * los dos bloques porque uno vive dentro de una media query y el otro no.
+ * Modo oscuro: sigue al sistema salvo que el usuario elija un tema
+ * (atributo data-tema en <html>). Los valores se repiten porque un bloque
+ * vive dentro de una media query y el otro no.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema="claro"]) {
-    --fondo: #121114;
-    --superficie: #1c1b20;
-    --superficie-2: #26242b;
-    --borde: #34313a;
-    --texto: #f2f0f5;
-    --texto-suave: #a9a5b2;
-    --mandarina-texto: #ff8c5a;
-    --mandarina-suave: #3a1f12;
-    --violeta: #9b7ff0;
-    --violeta-suave: #2a2240;
-    --sobre-violeta: #121114;
-    --exito: #51cf66;
-    --peligro: #ff8a5c;
+    --fondo: #15121d;
+    --tarjeta: #1f1b2a;
+    --superficie: #28233a;
+    --superficie-2: #322c47;
+    --borde: #342e47;
+    --borde-fuerte: #4a4166;
+    --texto: #f3f0fb;
+    --texto-suave: #b4adca;
+    --mandarina: #ff7a3d;
+    --mandarina-labio: #c24f17;
+    --mandarina-suave: #3b2116;
+    --mandarina-texto: #ff9b68;
+    --violeta: #6d4ae0;
+    --violeta-labio: #4b2fae;
+    --violeta-suave: #2c2447;
+    --violeta-texto: #b8a5fb;
+    --verde: #1fb26d;
+    --verde-labio: #158552;
+    --verde-suave: #16301f;
+    --verde-texto: #62dda1;
+    --amarillo: #ffc845;
+    --amarillo-labio: #c99512;
+    --amarillo-suave: #3a2f12;
+    --amarillo-texto: #ffd66e;
+    --cielo: #3aa6f2;
+    --cielo-labio: #1f7fc4;
+    --cielo-suave: #142c3d;
+    --cielo-texto: #84c8fa;
+    --peligro: #f25555;
+    --peligro-labio: #b83434;
+    --peligro-suave: #3b1a1d;
+    --peligro-texto: #ff8c8c;
     --grafico: #9378ec;
     --calor-1: #4f4385;
     --calor-2: #6b57b3;
@@ -63,19 +109,38 @@
 }
 
 :root[data-tema="oscuro"] {
-  --fondo: #121114;
-  --superficie: #1c1b20;
-  --superficie-2: #26242b;
-  --borde: #34313a;
-  --texto: #f2f0f5;
-  --texto-suave: #a9a5b2;
-  --mandarina-texto: #ff8c5a;
-  --mandarina-suave: #3a1f12;
-  --violeta: #9b7ff0;
-  --violeta-suave: #2a2240;
-  --sobre-violeta: #121114;
-  --exito: #51cf66;
-  --peligro: #ff8a5c;
+  --fondo: #15121d;
+  --tarjeta: #1f1b2a;
+  --superficie: #28233a;
+  --superficie-2: #322c47;
+  --borde: #342e47;
+  --borde-fuerte: #4a4166;
+  --texto: #f3f0fb;
+  --texto-suave: #b4adca;
+  --mandarina: #ff7a3d;
+  --mandarina-labio: #c24f17;
+  --mandarina-suave: #3b2116;
+  --mandarina-texto: #ff9b68;
+  --violeta: #6d4ae0;
+  --violeta-labio: #4b2fae;
+  --violeta-suave: #2c2447;
+  --violeta-texto: #b8a5fb;
+  --verde: #1fb26d;
+  --verde-labio: #158552;
+  --verde-suave: #16301f;
+  --verde-texto: #62dda1;
+  --amarillo: #ffc845;
+  --amarillo-labio: #c99512;
+  --amarillo-suave: #3a2f12;
+  --amarillo-texto: #ffd66e;
+  --cielo: #3aa6f2;
+  --cielo-labio: #1f7fc4;
+  --cielo-suave: #142c3d;
+  --cielo-texto: #84c8fa;
+  --peligro: #f25555;
+  --peligro-labio: #b83434;
+  --peligro-suave: #3b1a1d;
+  --peligro-texto: #ff8c8c;
   --grafico: #9378ec;
   --calor-1: #4f4385;
   --calor-2: #6b57b3;
@@ -86,23 +151,75 @@
 
 @theme inline {
   --color-fondo: var(--fondo);
+  --color-tarjeta: var(--tarjeta);
   --color-superficie: var(--superficie);
   --color-superficie-2: var(--superficie-2);
   --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
   --color-texto: var(--texto);
   --color-texto-suave: var(--texto-suave);
+
   --color-mandarina: var(--mandarina);
-  --color-mandarina-texto: var(--mandarina-texto);
+  --color-mandarina-labio: var(--mandarina-labio);
   --color-mandarina-suave: var(--mandarina-suave);
+  --color-mandarina-texto: var(--mandarina-texto);
   --color-violeta: var(--violeta);
+  --color-violeta-labio: var(--violeta-labio);
   --color-violeta-suave: var(--violeta-suave);
+  --color-violeta-texto: var(--violeta-texto);
   --color-sobre-violeta: var(--sobre-violeta);
-  --color-exito: var(--exito);
+  --color-verde: var(--verde);
+  --color-verde-labio: var(--verde-labio);
+  --color-verde-suave: var(--verde-suave);
+  --color-verde-texto: var(--verde-texto);
+  --color-amarillo: var(--amarillo);
+  --color-amarillo-labio: var(--amarillo-labio);
+  --color-amarillo-suave: var(--amarillo-suave);
+  --color-amarillo-texto: var(--amarillo-texto);
+  --color-cielo: var(--cielo);
+  --color-cielo-labio: var(--cielo-labio);
+  --color-cielo-suave: var(--cielo-suave);
+  --color-cielo-texto: var(--cielo-texto);
   --color-peligro: var(--peligro);
+  --color-peligro-labio: var(--peligro-labio);
+  --color-peligro-suave: var(--peligro-suave);
+  --color-peligro-texto: var(--peligro-texto);
   --color-grafico: var(--grafico);
 
-  --font-titulo: var(--font-sora);
-  --font-sans: var(--font-inter);
+  --font-titulo: var(--font-baloo);
+  --font-sans: var(--font-nunito);
+
+  --animate-pop: pop 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-flotar: flotar 3.2s ease-in-out infinite;
+  --animate-entrar: entrar 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* El check rebota al marcarse. */
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Chispa respira suavemente. */
+@keyframes flotar {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+/* Entrada de diálogos de celebración. */
+@keyframes entrar {
+  from { transform: translateY(16px) scale(0.96); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Confeti de papel picado: cada pieza recibe su destino por variables CSS. */
+@keyframes confeti {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 1; }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--giro)) scale(0.6);
+    opacity: 0;
+  }
 }
 
 body {
@@ -110,15 +227,25 @@ body {
   color: var(--texto);
 }
 
-/* Foco visible y consistente para navegación con teclado. */
-:focus-visible {
-  outline: 2px solid var(--violeta);
-  outline-offset: 2px;
+/* Superficies del navegador, también del sistema de diseño. */
+::selection {
+  background: var(--violeta-suave);
+  color: var(--texto);
 }
 
-/* Fondo del diálogo nativo. */
+:root {
+  caret-color: var(--violeta);
+  accent-color: var(--violeta);
+  scrollbar-color: var(--borde-fuerte) transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--violeta);
+  outline-offset: 3px;
+}
+
 dialog::backdrop {
-  background: rgb(0 0 0 / 0.45);
+  background: rgb(21 18 29 / 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -126,6 +253,7 @@ dialog::backdrop {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

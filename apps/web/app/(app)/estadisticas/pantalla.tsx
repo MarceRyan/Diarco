@@ -21,11 +21,12 @@ import {
   useRango,
   useResumenRango,
 } from "@diarco/shared/hooks";
-import { ChartColumn } from "lucide-react";
+import { ChartColumn, Clock, Flame, Smile, Target } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { BarrasHorizontales, GraficoArea, GraficoColumnas, MapaCalor, TarjetaGrafico } from "@/components/graficos";
-import { CargandoLista, Encabezado, Esqueleto, EstadoVacio, MensajeError } from "@/components/ui/estados";
+import { claseBoton } from "@/components/ui/boton";
+import { CargandoLista, claseTarjeta, Encabezado, Esqueleto, EstadoVacio, MensajeError } from "@/components/ui/estados";
 import { duracion, fechaCorta, porcentaje } from "@/lib/formato";
 
 const PERIODOS = [
@@ -46,29 +47,29 @@ export function PantallaEstadisticas() {
 
   return (
     <>
-      <Encabezado titulo="Estadísticas" subtitulo="Cómo vas con tus hábitos y en qué se va tu tiempo." />
+      <Encabezado titulo="Tu progreso" subtitulo="Cómo vas con tus hábitos y en qué se va tu tiempo." />
       {habitos.data.length === 0 ? (
         <EstadoVacio
-          icono={<ChartColumn className="size-6" />}
+          icono={<ChartColumn className="size-7" strokeWidth={2.5} />}
           titulo="Aún no hay nada que medir"
-          descripcion="Crea hábitos y márcalos durante algunos días: aquí verás tu progreso."
+          descripcion="Crea hábitos y márcalos unos días: aquí verás cómo vas creciendo."
           accion={
-            <Link href="/habitos" className="inline-flex min-h-11 items-center rounded-xl bg-violeta px-4 text-sm font-semibold text-sobre-violeta">
-              Crear hábito
+            <Link href="/habitos" className={claseBoton("primario")}>
+              Crear un hábito
             </Link>
           }
         />
       ) : (
         <div className="space-y-6">
           {/* Filtro de periodo: una fila sobre los gráficos */}
-          <div role="group" aria-label="Periodo" className="inline-flex rounded-xl border border-borde p-1">
+          <div role="group" aria-label="Periodo" className="inline-flex gap-1 rounded-2xl border-2 border-borde bg-tarjeta p-1">
             {PERIODOS.map((p) => (
               <button
                 key={p.dias}
                 type="button"
                 aria-pressed={periodo === p.dias}
                 onClick={() => setPeriodo(p.dias)}
-                className="min-h-11 rounded-lg px-4 text-sm font-medium text-texto-suave aria-pressed:bg-violeta-suave aria-pressed:text-violeta"
+                className="min-h-11 rounded-xl px-4 font-extrabold text-texto-suave transition-colors aria-pressed:bg-violeta aria-pressed:text-sobre-violeta"
               >
                 {p.etiqueta}
               </button>
@@ -97,11 +98,7 @@ function Contenido({ dias }: { dias: number }) {
   if (!cumplimiento.data || !resumen.data || !actividades.data || !animo.data || !rachas) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <Esqueleto key={i} className="h-24" />
-          ))}
-        </div>
+        <Esqueleto className="h-56" />
         <Esqueleto className="h-72" />
       </div>
     );
@@ -120,16 +117,44 @@ function Contenido({ dias }: { dias: number }) {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Dato etiqueta="Cumplimiento" valor={tasa === null ? "—" : porcentaje(tasa)} detalle="de los días programados" />
-        <Dato
-          etiqueta="Racha general"
-          valor={`${rachas.general.actual} ${rachas.general.actual === 1 ? "día" : "días"}`}
-          detalle={`Mejor: ${rachas.general.maxima}`}
-        />
-        <Dato etiqueta="Tiempo registrado" valor={minutos > 0 ? duracion(minutos) : "—"} detalle="en la bitácora" />
-        <Dato etiqueta="Ánimo promedio" valor={animoMedio === null ? "—" : `${animoMedio} / 5`} detalle={`${animo.data.length} días registrados`} />
-      </div>
+      {/* Resumen del periodo en frases: lo que importa, dicho como lo diría un amigo */}
+      <section aria-label="Resumen del periodo" className={`${claseTarjeta} divide-y-2 divide-borde`}>
+        <Frase icono={<Target className="size-5" strokeWidth={2.5} />} color="bg-violeta text-white">
+          {tasa === null ? (
+            "No tuviste hábitos programados en este periodo."
+          ) : (
+            <>
+              Cumpliste el <strong className="text-violeta-texto">{porcentaje(tasa)}</strong> de tus hábitos programados.
+            </>
+          )}
+        </Frase>
+        <Frase icono={<Flame className="size-5" strokeWidth={2.5} />} color="bg-mandarina text-white">
+          Tu racha va en{" "}
+          <strong className="text-mandarina-texto">
+            {rachas.general.actual} {rachas.general.actual === 1 ? "día" : "días"}
+          </strong>
+          ; tu mejor marca es de {rachas.general.maxima}.
+        </Frase>
+        <Frase icono={<Clock className="size-5" strokeWidth={2.5} />} color="bg-cielo text-white">
+          {minutos > 0 ? (
+            <>
+              Registraste <strong className="text-cielo-texto">{duracion(minutos)}</strong> en tu bitácora.
+            </>
+          ) : (
+            "Aún no registras tiempo en la bitácora en este periodo."
+          )}
+        </Frase>
+        <Frase icono={<Smile className="size-5" strokeWidth={2.5} />} color="bg-amarillo text-[#2a2342]">
+          {animoMedio === null ? (
+            "Cuéntanos cómo te sientes en Hoy para ver tu ánimo aquí."
+          ) : (
+            <>
+              Tu ánimo promedio fue <strong className="text-amarillo-texto">{animoMedio} de 5</strong> ({animo.data.length}{" "}
+              {animo.data.length === 1 ? "día" : "días"}).
+            </>
+          )}
+        </Frase>
+      </section>
 
       <TarjetaGrafico
         titulo="Cumplimiento diario"
@@ -192,7 +217,7 @@ function Contenido({ dias }: { dias: number }) {
       >
         {porCategoria.length === 0 ? (
           <SinDatos>
-            Registra actividades con minutos en la <Link href="/bitacora" className="font-medium text-violeta underline">Bitácora</Link> para ver en qué se va tu tiempo.
+            Registra actividades con minutos en la <Link href="/bitacora" className="font-medium text-violeta-texto underline">Bitácora</Link> para ver en qué se va tu tiempo.
           </SinDatos>
         ) : (
           <BarrasHorizontales
@@ -250,16 +275,18 @@ function MapaAnual() {
   );
 }
 
-function Dato({ etiqueta, valor, detalle }: { etiqueta: string; valor: string; detalle: string }) {
+/** Una línea del resumen: burbuja de color con ícono + frase. */
+function Frase({ icono, color, children }: { icono: ReactNode; color: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-borde p-4">
-      <p className="text-sm text-texto-suave">{etiqueta}</p>
-      <p className="mt-1 font-titulo text-2xl font-semibold">{valor}</p>
-      <p className="text-xs text-texto-suave">{detalle}</p>
-    </div>
+    <p className="flex items-center gap-3 px-4 py-3.5 text-lg font-semibold">
+      <span className={`flex size-10 shrink-0 items-center justify-center rounded-2xl ${color}`} aria-hidden>
+        {icono}
+      </span>
+      <span>{children}</span>
+    </p>
   );
 }
 
 function SinDatos({ children }: { children: ReactNode }) {
-  return <p className="rounded-2xl border border-dashed border-borde p-4 text-sm text-texto-suave">{children}</p>;
+  return <p className="rounded-2xl border-2 border-dashed border-borde-fuerte p-4 text-texto-suave">{children}</p>;
 }

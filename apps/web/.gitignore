@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capturas de revisión de diseño (Impeccable)
+.impeccable/review/

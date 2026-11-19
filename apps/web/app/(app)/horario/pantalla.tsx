@@ -6,7 +6,7 @@ import { CalendarClock, Plus } from "lucide-react";
 import { useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
-import { CargandoLista, Encabezado, EstadoVacio, MensajeError } from "@/components/ui/estados";
+import { CargandoLista, claseTarjeta, Encabezado, EstadoVacio, MensajeError } from "@/components/ui/estados";
 import { horaCorta } from "@/lib/formato";
 import { FormularioBloque } from "./formulario-bloque";
 
@@ -29,28 +29,29 @@ export function PantallaHorario() {
   const { data: categorias = [] } = useCategorias();
   const [diaMovil, setDiaMovil] = useState<number>(() => diaSemana(hoy));
   const [edicion, setEdicion] = useState<Edicion>(null);
+  const diaHoy = diaSemana(hoy);
 
   const delDia = (dia: number) => bloques.data?.filter((b) => b.dias_semana.includes(dia)) ?? [];
-  const colorDe = (b: BloqueHorario) => categorias.find((c) => c.id === b.categoria_id);
+  const categoriaDe = (b: BloqueHorario) => categorias.find((c) => c.id === b.categoria_id);
 
   const botonNuevo = (
     <Boton onClick={() => setEdicion({ dia: diaMovil })}>
-      <Plus className="size-4" aria-hidden />
-      Bloque
+      <Plus className="size-5" strokeWidth={3} aria-hidden />
+      Agregar bloque
     </Boton>
   );
 
   return (
     <>
-      <Encabezado titulo="Horario" subtitulo="Tu semana tipo, bloque por bloque." accion={botonNuevo} />
+      <Encabezado titulo="Tu semana" subtitulo="Organiza tu horario bloque por bloque." accion={botonNuevo} />
 
       {bloques.isPending ? (
-        <CargandoLista filas={4} alto="h-14" />
+        <CargandoLista filas={4} alto="h-16" />
       ) : bloques.error ? (
         <MensajeError error={bloques.error} onReintentar={() => bloques.refetch()} />
       ) : bloques.data.length === 0 ? (
         <EstadoVacio
-          icono={<CalendarClock className="size-6" />}
+          icono={<CalendarClock className="size-7" strokeWidth={2.5} />}
           titulo="Arma tu semana"
           descripcion="Agrega bloques como trabajo, clases o ejercicio. Se repiten cada semana en los días que elijas."
           accion={botonNuevo}
@@ -59,7 +60,7 @@ export function PantallaHorario() {
         <>
           {/* Móvil: un día a la vez */}
           <div className="md:hidden">
-            <div role="group" aria-label="Día de la semana" className="mb-4 grid grid-cols-7 gap-1">
+            <div role="group" aria-label="Día de la semana" className="mb-4 grid grid-cols-7 gap-1.5">
               {DIAS.map((d) => (
                 <button
                   key={d.valor}
@@ -67,15 +68,18 @@ export function PantallaHorario() {
                   aria-pressed={diaMovil === d.valor}
                   aria-label={d.largo}
                   onClick={() => setDiaMovil(d.valor)}
-                  className="min-h-11 rounded-xl text-sm font-medium text-texto-suave aria-pressed:bg-violeta aria-pressed:text-sobre-violeta"
+                  className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 border-b-4 text-sm font-extrabold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-cielo-labio aria-pressed:bg-cielo aria-pressed:text-white ${
+                    d.valor === diaHoy ? "border-cielo/50 bg-cielo-suave text-cielo-texto" : "border-borde bg-tarjeta text-texto-suave"
+                  }`}
                 >
                   {d.corto}
+                  {d.valor === diaHoy && <span className="text-[10px] leading-none">hoy</span>}
                 </button>
               ))}
             </div>
             <ListaDia
               bloques={delDia(diaMovil)}
-              colorDe={colorDe}
+              categoriaDe={categoriaDe}
               onEditar={(bloque) => setEdicion({ bloque, dia: diaMovil })}
             />
           </div>
@@ -85,8 +89,8 @@ export function PantallaHorario() {
             {DIAS.map((d) => (
               <section key={d.valor} aria-label={d.largo} className="min-w-0">
                 <h2
-                  className={`mb-2 rounded-lg py-1 text-center text-sm font-semibold ${
-                    d.valor === diaSemana(hoy) ? "bg-violeta-suave text-violeta" : "text-texto-suave"
+                  className={`mb-2 rounded-xl py-1.5 text-center font-extrabold ${
+                    d.valor === diaHoy ? "bg-cielo text-white" : "text-texto-suave"
                   }`}
                 >
                   {d.corto}
@@ -94,7 +98,7 @@ export function PantallaHorario() {
                 <ListaDia
                   compacta
                   bloques={delDia(d.valor)}
-                  colorDe={colorDe}
+                  categoriaDe={categoriaDe}
                   onEditar={(bloque) => setEdicion({ bloque, dia: d.valor })}
                 />
               </section>
@@ -123,36 +127,49 @@ export function PantallaHorario() {
 
 function ListaDia({
   bloques,
-  colorDe,
+  categoriaDe,
   onEditar,
   compacta = false,
 }: {
   bloques: BloqueHorario[];
-  colorDe: (b: BloqueHorario) => Categoria | undefined;
+  categoriaDe: (b: BloqueHorario) => Categoria | undefined;
   onEditar: (b: BloqueHorario) => void;
   compacta?: boolean;
 }) {
   if (bloques.length === 0) {
-    return <p className="py-4 text-center text-sm text-texto-suave">{compacta ? "—" : "Día libre"}</p>;
+    return compacta ? (
+      <p className="py-4 text-center text-texto-suave" aria-label="Sin bloques">
+        —
+      </p>
+    ) : (
+      <p className={`${claseTarjeta} p-5 text-center text-texto-suave`}>Día libre. ¡Disfrútalo! 🌤️</p>
+    );
   }
   return (
     <ol className="space-y-2">
       {bloques.map((b) => {
-        const categoria = colorDe(b);
+        const categoria = categoriaDe(b);
         return (
           <li key={b.id}>
             <button
               type="button"
               onClick={() => onEditar(b)}
               aria-label={`${b.titulo}, de ${horaCorta(b.inicio)} a ${horaCorta(b.fin)}. Editar`}
-              className="w-full rounded-xl border-l-4 bg-superficie p-3 text-left transition hover:bg-superficie-2"
-              style={{ borderLeftColor: categoria?.color ?? "var(--borde)" }}
+              className={`${claseTarjeta} w-full text-left transition-transform duration-100 hover:border-borde-fuerte active:translate-y-[2px] active:border-b-2 ${
+                compacta ? "p-2.5" : "flex items-center gap-3 p-3"
+              }`}
             >
-              <span className="block text-xs font-medium tabular-nums text-texto-suave">
-                {horaCorta(b.inicio)}–{horaCorta(b.fin)}
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-lg bg-cielo-suave font-extrabold text-cielo-texto tabular-nums ${
+                  compacta ? "px-1.5 py-0.5 text-[11px]" : "shrink-0 px-2.5 py-1 text-sm"
+                }`}
+              >
+                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: categoria?.color ?? "var(--cielo)" }} aria-hidden />
+                {horaCorta(b.inicio)}
+                {!compacta && `–${horaCorta(b.fin)}`}
               </span>
-              <span className={`block font-medium ${compacta ? "text-sm break-words" : ""}`}>{b.titulo}</span>
-              {categoria && !compacta && <span className="text-xs text-texto-suave">{categoria.nombre}</span>}
+              <span className={`block font-bold ${compacta ? "mt-1 text-sm break-words" : "min-w-0 flex-1 truncate"}`}>{b.titulo}</span>
+              {categoria && !compacta && <span className="shrink-0 text-sm text-texto-suave">{categoria.nombre}</span>}
             </button>
           </li>
         );

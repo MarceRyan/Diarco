@@ -8,7 +8,7 @@ import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { useCerrarSesion } from "@/components/navegacion";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Selector } from "@/components/ui/campos";
-import { CargandoLista, Encabezado, MensajeError } from "@/components/ui/estados";
+import { CargandoLista, claseTarjeta, Encabezado, MensajeError } from "@/components/ui/estados";
 import { erroresPorCampo } from "@/lib/formularios";
 import { aplicarTema, leerTema, type Tema } from "@/lib/tema";
 
@@ -16,7 +16,7 @@ export function PantallaConfiguracion() {
   const perfil = usePerfil();
   return (
     <>
-      <Encabezado titulo="Configuración" />
+      <Encabezado titulo="Ajustes" subtitulo="Haz que Diarco sea tuyo." />
       <div className="space-y-6">
         {perfil.isPending ? (
           <CargandoLista filas={3} />
@@ -34,8 +34,8 @@ export function PantallaConfiguracion() {
 
 function Seccion({ titulo, descripcion, children }: { titulo: string; descripcion?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-3xl border border-borde p-5">
-      <h2 className="font-titulo text-lg font-semibold">{titulo}</h2>
+    <section className={`${claseTarjeta} p-5`}>
+      <h2 className="font-titulo text-2xl font-bold">{titulo}</h2>
       {descripcion && <p className="mt-1 text-sm text-texto-suave">{descripcion}</p>}
       <div className="mt-4">{children}</div>
     </section>
@@ -115,7 +115,7 @@ function FormularioPerfil({ perfil }: { perfil: Perfil }) {
             Guardar
           </Boton>
           {guardado && (
-            <span role="status" className="inline-flex items-center gap-1 text-sm text-exito">
+            <span role="status" className="inline-flex items-center gap-1 font-extrabold text-verde-texto">
               <Check className="size-4" aria-hidden /> Guardado
             </span>
           )}
@@ -155,9 +155,9 @@ function Apariencia() {
             type="button"
             aria-pressed={tema === valor}
             onClick={() => elegir(valor)}
-            className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl border border-borde text-sm font-medium text-texto-suave aria-pressed:border-violeta aria-pressed:bg-violeta-suave aria-pressed:text-violeta"
+            className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta font-extrabold text-texto-suave transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-violeta aria-pressed:bg-violeta-suave aria-pressed:text-violeta-texto"
           >
-            <Icono className="size-5" aria-hidden />
+            <Icono className="size-6" strokeWidth={2.5} aria-hidden />
             {etiqueta}
           </button>
         ))}

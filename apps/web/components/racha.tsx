@@ -1,20 +1,16 @@
 import { Flame } from "lucide-react";
 
-/** Llama con el número de días de racha. Apagada (gris) si la racha es 0. */
-export function InsigniaRacha({ dias, grande = false }: { dias: number; grande?: boolean }) {
+/** Pastilla con la llama y los días de racha. Apagada (gris) si la racha es 0. */
+export function InsigniaRacha({ dias }: { dias: number }) {
   const encendida = dias > 0;
   return (
     <span
-      className={`inline-flex items-center gap-1 font-titulo font-bold tabular-nums ${
-        encendida ? "text-mandarina-texto" : "text-texto-suave"
-      } ${grande ? "text-3xl" : "text-sm"}`}
+      className={`inline-flex min-w-12 items-center justify-center gap-1 rounded-full px-2.5 py-1 font-titulo text-base leading-none font-bold tabular-nums ${
+        encendida ? "bg-mandarina-suave text-mandarina-texto" : "bg-superficie text-texto-suave"
+      }`}
       aria-label={`Racha de ${dias} ${dias === 1 ? "día" : "días"}`}
     >
-      <Flame
-        className={grande ? "size-8" : "size-4"}
-        fill={encendida ? "currentColor" : "none"}
-        aria-hidden
-      />
+      <Flame className="size-4" strokeWidth={2.5} fill={encendida ? "currentColor" : "none"} aria-hidden />
       {dias}
     </span>
   );

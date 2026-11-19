@@ -13,7 +13,7 @@ export function FormularioLogin() {
   const errorEnlace = useSearchParams().get("error") === "enlace";
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(
-    errorEnlace ? "El enlace de confirmación no es válido o expiró." : null,
+    errorEnlace ? "El enlace de confirmación no es válido o ya venció." : null,
   );
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
@@ -30,10 +30,10 @@ export function FormularioLogin() {
     if (error) {
       setError(
         error.code === "invalid_credentials"
-          ? "Correo o contraseña incorrectos."
+          ? "El correo o la contraseña no coinciden."
           : error.code === "email_not_confirmed"
-            ? "Confirma tu correo antes de entrar (revisa tu bandeja de entrada)."
-            : "No se pudo iniciar sesión. Inténtalo de nuevo.",
+            ? "Primero confirma tu correo: revisa tu bandeja de entrada."
+            : "No pudimos iniciar sesión. Inténtalo otra vez.",
       );
       setCargando(false);
       return;
@@ -44,18 +44,18 @@ export function FormularioLogin() {
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-4" noValidate>
-      <h1 className="font-titulo text-2xl font-bold">Iniciar sesión</h1>
+    <form onSubmit={enviar} className="space-y-5" noValidate>
+      <h1 className="text-center font-titulo text-3xl font-extrabold">¡Qué bueno verte!</h1>
       {error && <MensajeError error={new Error(error)} />}
-      <Campo etiqueta="Correo" name="email" type="email" autoComplete="email" required />
+      <Campo etiqueta="Correo" name="email" type="email" autoComplete="email" placeholder="tu@correo.com" required />
       <Campo etiqueta="Contraseña" name="password" type="password" autoComplete="current-password" required />
-      <Boton type="submit" cargando={cargando} className="w-full">
+      <Boton type="submit" grande cargando={cargando} className="w-full">
         Entrar
       </Boton>
-      <p className="text-center text-sm text-texto-suave">
-        ¿No tienes cuenta?{" "}
-        <Link href="/registro" className="inline-block py-3 font-semibold text-violeta">
-          Regístrate
+      <p className="text-center text-texto-suave">
+        ¿Primera vez aquí?{" "}
+        <Link href="/registro" className="inline-block py-3 font-extrabold text-violeta-texto">
+          Crea tu cuenta
         </Link>
       </p>
     </form>

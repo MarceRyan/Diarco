@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SECUNDARIOS } from "@/lib/secciones";
-import { Encabezado } from "@/components/ui/estados";
+import { claseTarjeta, Encabezado } from "@/components/ui/estados";
+import { CLASES_COLOR, SECUNDARIOS } from "@/lib/secciones";
 
 export const metadata: Metadata = { title: "Más" };
 
@@ -10,19 +10,22 @@ export const metadata: Metadata = { title: "Más" };
 export default function PaginaMas() {
   return (
     <>
-      <Encabezado titulo="Más" />
-      <ul className="divide-y divide-borde overflow-hidden rounded-2xl border border-borde">
-        {SECUNDARIOS.map(({ href, etiqueta, descripcion, Icono }) => (
+      <Encabezado titulo="Más cosas" />
+      <ul className="space-y-3">
+        {SECUNDARIOS.map(({ href, etiqueta, descripcion, Icono, color }) => (
           <li key={href}>
-            <Link href={href} className="flex min-h-16 items-center gap-4 px-4 py-3 hover:bg-superficie">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-violeta-suave text-violeta" aria-hidden>
-                <Icono className="size-5" />
+            <Link
+              href={href}
+              className={`${claseTarjeta} flex min-h-18 items-center gap-4 px-4 py-3 transition-transform active:translate-y-[2px] active:border-b-2`}
+            >
+              <span className={`flex size-12 items-center justify-center rounded-2xl ${CLASES_COLOR[color].icono}`} aria-hidden>
+                <Icono className="size-6" strokeWidth={2.5} />
               </span>
               <span className="flex-1">
-                <span className="block font-semibold">{etiqueta}</span>
-                <span className="block text-sm text-texto-suave">{descripcion}</span>
+                <span className="block font-titulo text-xl font-bold">{etiqueta}</span>
+                <span className="block text-texto-suave">{descripcion}</span>
               </span>
-              <ChevronRight className="size-5 text-texto-suave" aria-hidden />
+              <ChevronRight className="size-6 text-texto-suave" strokeWidth={2.5} aria-hidden />
             </Link>
           </li>
         ))}

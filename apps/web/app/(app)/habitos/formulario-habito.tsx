@@ -62,7 +62,7 @@ export function FormularioHabito({ habito, onListo }: { habito?: Habito; onListo
       />
 
       <fieldset>
-        <legend className="mb-1.5 text-sm font-medium">Ícono</legend>
+        <legend className="mb-2 text-sm font-extrabold">Ícono</legend>
         <div className="flex flex-wrap gap-2">
           {ICONOS.map((i) => (
             <button
@@ -71,7 +71,7 @@ export function FormularioHabito({ habito, onListo }: { habito?: Habito; onListo
               aria-pressed={icono === i}
               aria-label={`Ícono ${i}`}
               onClick={() => setIcono(i)}
-              className="size-11 rounded-xl border border-borde text-xl aria-pressed:border-violeta aria-pressed:bg-violeta-suave"
+              className="size-12 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta text-2xl transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-violeta aria-pressed:bg-violeta-suave"
             >
               {i}
             </button>
@@ -82,7 +82,7 @@ export function FormularioHabito({ habito, onListo }: { habito?: Habito; onListo
       <SelectorColor valor={color} onCambiar={setColor} />
       <SelectorDias valor={dias} onCambiar={setDias} error={errores.dias_semana} />
       <Campo
-        etiqueta="Meta (opcional)"
+        etiqueta="Tu meta (opcional)"
         value={meta}
         onChange={(e) => setMeta(e.target.value)}
         placeholder="Ej. 20 páginas"
@@ -91,9 +91,12 @@ export function FormularioHabito({ habito, onListo }: { habito?: Habito; onListo
       />
 
       {habito && (
-        <label className="flex min-h-11 items-center gap-3 text-sm">
-          <input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} className="size-5 accent-violeta" />
-          Activo (los hábitos pausados no cuentan para las rachas)
+        <label className="flex min-h-12 items-center gap-3 rounded-2xl bg-superficie px-4 font-bold">
+          <input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} className="size-5" />
+          <span>
+            Activo
+            <span className="block text-sm font-medium text-texto-suave">Si lo pausas, no cuenta para tus rachas.</span>
+          </span>
         </label>
       )}
 
@@ -105,8 +108,8 @@ export function FormularioHabito({ habito, onListo }: { habito?: Habito; onListo
         ) : (
           <span />
         )}
-        <Boton type="submit" cargando={mutacion.isPending}>
-          {habito ? "Guardar cambios" : "Crear hábito"}
+        <Boton type="submit" variante="exito" grande cargando={mutacion.isPending}>
+          {habito ? "Guardar cambios" : "¡Crear hábito!"}
         </Boton>
       </div>
     </form>

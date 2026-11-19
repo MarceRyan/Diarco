@@ -62,8 +62,12 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 - Fechas como texto `AAAA-MM-DD` (tipo `Fecha`), operadas en UTC puro; nunca usar `new Date("AAAA-MM-DD")` local.
 
 ## Diseño
-- Colores: mandarina #ff6a2b (rachas), violeta #6741d9 (progreso), fondo blanco; modo oscuro obligatorio.
-- Tipografías: Sora (títulos) e Inter (texto).
+- Estilo "Fiesta de colores": amigable y lúdico (tipo app de hábitos gamificada), con mascota propia **Chispa**.
+  El sistema completo está en `DESIGN.md` y el producto en `PRODUCT.md`: leerlos antes de tocar la interfaz.
+- Colores por rol: mandarina #ff6a2b (rachas), violeta #6741d9 (progreso/acción), verde (hecho), amarillo (logros),
+  cielo (horario); fondo lavanda; modo oscuro obligatorio. Como color de letra usar siempre la variante `-texto`.
+- Tipografías: Baloo 2 (títulos) y Nunito (texto).
+- Tarjetas y botones con "labio" inferior de 4 px que se hunde al presionar (`claseTarjeta`, `Boton`).
 - Mobile first, botones de al menos 44 px, buen contraste, estados vacíos y de carga en cada pantalla.
 - Gráficos: una serie por gráfico con `--grafico`; mapa de calor con `--calor-1..4` (valores validados con la skill dataviz
   en modo claro y oscuro: no cambiarlos sin volver a validar). Cada gráfico con tooltip y tabla "Ver datos".

@@ -20,6 +20,7 @@ import {
   YAxis,
 } from "recharts";
 import { fechaCorta } from "@/lib/formato";
+import { claseTarjeta } from "./ui/estados";
 
 // -----------------------------------------------------------------------------
 // Contenedor con título y tabla de datos
@@ -37,14 +38,14 @@ export function TarjetaGrafico({
   children: ReactNode;
 }) {
   return (
-    <figure className="rounded-3xl border border-borde p-4 sm:p-5">
+    <figure className={`${claseTarjeta} p-4 sm:p-5`}>
       <figcaption className="mb-4">
-        <span className="block font-titulo font-semibold">{titulo}</span>
-        {descripcion && <span className="block text-sm text-texto-suave">{descripcion}</span>}
+        <span className="block font-titulo text-xl font-bold">{titulo}</span>
+        {descripcion && <span className="block text-texto-suave">{descripcion}</span>}
       </figcaption>
       {children}
       <details className="mt-3 text-sm">
-        <summary className="inline-flex min-h-11 cursor-pointer items-center text-texto-suave hover:text-texto">
+        <summary className="inline-flex min-h-11 cursor-pointer items-center font-extrabold text-texto-suave hover:text-texto">
           Ver datos
         </summary>
         <div className="max-h-64 overflow-y-auto">
@@ -80,9 +81,9 @@ function ContenidoTooltip({ active, payload, formato }: PropsTooltip) {
   if (!active || !punto) return null;
   const valor = typeof punto.value === "number" ? formato(punto.value) : "Sin hábitos";
   return (
-    <div className="rounded-xl border border-borde bg-fondo px-3 py-2 text-sm shadow-md">
-      <p className="text-texto-suave">{punto.payload?.etiqueta}</p>
-      <p className="font-semibold tabular-nums">{valor}</p>
+    <div className="rounded-2xl border-2 border-b-4 border-borde bg-tarjeta px-3 py-2 text-sm">
+      <p className="font-bold text-texto-suave">{punto.payload?.etiqueta}</p>
+      <p className="font-titulo text-lg font-bold tabular-nums">{valor}</p>
     </div>
   );
 }
@@ -187,14 +188,14 @@ export function BarrasHorizontales({
     <ul className="space-y-3">
       {filas.map((f) => (
         <li key={f.id} className="space-y-1" title={f.texto}>
-          <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="min-w-0 truncate">{f.etiqueta}</span>
-            <span className="shrink-0 tabular-nums text-texto-suave">{f.texto}</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="min-w-0 truncate font-bold">{f.etiqueta}</span>
+            <span className="shrink-0 font-extrabold tabular-nums text-texto-suave">{f.texto}</span>
           </div>
-          <div className="h-3 rounded-r" aria-hidden>
+          <div className="h-4 overflow-hidden rounded-full bg-superficie" aria-hidden>
             <div
-              className="h-full rounded-r bg-grafico"
-              style={{ width: `${max > 0 ? Math.max(1, (f.valor / max) * 100) : 0}%` }}
+              className="h-full rounded-full bg-grafico"
+              style={{ width: `${max > 0 ? Math.max(2, (f.valor / max) * 100) : 0}%` }}
             />
           </div>
         </li>
