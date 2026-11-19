@@ -66,19 +66,20 @@ export function PantallaHoy() {
   return (
     <>
       <Encabezado titulo={nombre ? `¡Hola, ${nombre}!` : "¡Hola!"} subtitulo={fechaLarga(hoy)} />
-      {/* Escritorio: lo principal (racha y hábitos) a la izquierda; ánimo y agenda a la derecha */}
-      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_26rem]">
+      {/*
+        Escritorio: a la izquierda tu día (racha y semana, hábitos, agenda y anotar);
+        a la derecha dos herramientas compactas (ánimo y enfoque) que acompañan al hacer scroll.
+      */}
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0 space-y-8">
           <TarjetaRacha />
           <AvisoAyer />
           <HabitosDeHoy onCelebrar={setCelebracion} />
+          <TuDia />
         </div>
-        <div className="min-w-0 space-y-6">
-          <SemanaRacha />
+        <div className="min-w-0 space-y-6 xl:sticky xl:top-10">
           <Animo />
           <Enfoque />
-          <AnotarRapido />
-          <AgendaDeHoy />
         </div>
       </div>
       <PantallaCelebracion datos={celebracion} onCerrar={() => setCelebracion(null)} />
@@ -172,8 +173,11 @@ function TarjetaRacha() {
             </div>
           </div>
         )}
-        <p className={`flex items-start gap-2 font-bold ${salvados.length > 0 ? "text-verde-texto" : "text-texto-suave"}`}>
-          <ShieldCheck className="mt-0.5 size-5 shrink-0" strokeWidth={2.5} aria-hidden />
+        <div className="border-t-2 border-borde pt-4">
+          <SemanaRacha />
+        </div>
+        <p className={`flex items-start gap-2 text-sm font-bold ${salvados.length > 0 ? "text-verde-texto" : "text-texto-suave"}`}>
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" strokeWidth={2.5} aria-hidden />
           {lineaProtector}
         </p>
       </div>
@@ -458,9 +462,9 @@ function PantallaCelebracion({ datos, onCerrar }: { datos: Celebracion | null; o
 }
 
 // -----------------------------------------------------------------------------
-// Agenda del día
+// Tu día: lo planeado (agenda) y lo que vas haciendo (anotar rápido) juntos
 // -----------------------------------------------------------------------------
-function AgendaDeHoy() {
+function TuDia() {
   const hoy = useHoy();
   const bloques = useBloques();
   const { data: categorias = [] } = useCategorias();
@@ -468,45 +472,54 @@ function AgendaDeHoy() {
   const deHoy = bloques.data?.filter((b) => b.dias_semana.includes(dia)) ?? [];
 
   return (
-    <section aria-labelledby="titulo-agenda">
+    <section aria-labelledby="titulo-tu-dia">
       <div className="mb-3 flex items-center justify-between">
-        <h2 id="titulo-agenda" className="font-titulo text-2xl font-bold">
-          Tu agenda
+        <h2 id="titulo-tu-dia" className="font-titulo text-2xl font-bold">
+          Tu día
         </h2>
         <Link href="/horario" className="inline-flex min-h-11 items-center font-extrabold text-cielo-texto">
           Ver semana
         </Link>
       </div>
-      {bloques.isPending ? (
-        <CargandoLista filas={2} alto="h-16" />
-      ) : bloques.error ? (
-        <MensajeError error={bloques.error} onReintentar={() => bloques.refetch()} />
-      ) : deHoy.length === 0 ? (
-        <div className={`${claseTarjeta} flex items-center gap-3 p-4 text-texto-suave`}>
-          <Clock className="size-5 shrink-0 text-cielo-texto" strokeWidth={2.5} aria-hidden />
-          <p>
-            Nada agendado para hoy.{" "}
-            <Link href="/horario" className="font-extrabold text-cielo-texto underline underline-offset-4">
-              Arma tu semana
-            </Link>
+      <div className={claseTarjeta}>
+        {bloques.isPending ? (
+          <div className="p-4">
+            <CargandoLista filas={2} alto="h-12" />
+          </div>
+        ) : bloques.error ? (
+          <div className="p-4">
+            <MensajeError error={bloques.error} onReintentar={() => bloques.refetch()} />
+          </div>
+        ) : deHoy.length === 0 ? (
+          <p className="flex items-center gap-3 p-4 text-texto-suave">
+            <Clock className="size-5 shrink-0 text-cielo-texto" strokeWidth={2.5} aria-hidden />
+            <span>
+              Nada agendado para hoy.{" "}
+              <Link href="/horario" className="font-extrabold text-cielo-texto underline underline-offset-4">
+                Arma tu semana
+              </Link>
+            </span>
           </p>
+        ) : (
+          <ol className="divide-y-2 divide-borde" aria-label="Agenda de hoy">
+            {deHoy.map((b) => {
+              const categoria = categorias.find((c) => c.id === b.categoria_id);
+              return (
+                <li key={b.id} className="flex items-center gap-3 px-4 py-3">
+                  <span className="shrink-0 rounded-xl bg-cielo-suave px-2.5 py-1 text-sm font-extrabold text-cielo-texto tabular-nums">
+                    {horaCorta(b.inicio)}–{horaCorta(b.fin)}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-bold">{b.titulo}</span>
+                  {categoria && <ChipCategoria categoria={categoria} />}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+        <div className="border-t-2 border-borde p-4">
+          <AnotarRapido />
         </div>
-      ) : (
-        <ol className={`${claseTarjeta} divide-y-2 divide-borde`}>
-          {deHoy.map((b) => {
-            const categoria = categorias.find((c) => c.id === b.categoria_id);
-            return (
-              <li key={b.id} className="flex items-center gap-3 px-4 py-3">
-                <span className="shrink-0 rounded-xl bg-cielo-suave px-2.5 py-1 text-sm font-extrabold text-cielo-texto tabular-nums">
-                  {horaCorta(b.inicio)}–{horaCorta(b.fin)}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-bold">{b.titulo}</span>
-                {categoria && <ChipCategoria categoria={categoria} />}
-              </li>
-            );
-          })}
-        </ol>
-      )}
+      </div>
     </section>
   );
 }

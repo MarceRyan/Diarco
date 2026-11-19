@@ -2,7 +2,7 @@
 
 import { horaActual } from "@diarco/shared";
 import { useCrearActividad, useHoy, useZonaHoraria } from "@diarco/shared/hooks";
-import { Pause, Play, Square, Timer } from "lucide-react";
+import { Pause, Play, Plus, Square, Timer } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { SelectorCategoria } from "@/components/categorias";
@@ -81,6 +81,7 @@ export function Enfoque() {
   const [descripcion, setDescripcion] = useState("");
   const [minutos, setMinutos] = useState(25);
   const [categoria, setCategoria] = useState<number | null>(null);
+  const [verCategoria, setVerCategoria] = useState(false);
   const [error, setError] = useState<string>();
 
   /** Cierra la sesión y la anota en la bitácora (si hubo al menos 1 minuto). */
@@ -120,7 +121,7 @@ export function Enfoque() {
   function empezar(evento: FormEvent) {
     evento.preventDefault();
     const texto = descripcion.trim();
-    if (!texto) return setError("¿En qué te vas a enfocar?");
+    if (!texto) return setError("Escribe en qué te vas a enfocar.");
     setError(undefined);
     setResultado(null);
     escribir({
@@ -236,28 +237,44 @@ export function Enfoque() {
           <Campo
             etiqueta="¿En qué te vas a enfocar?"
             value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
+            onChange={(e) => {
+              setDescripcion(e.target.value);
+              setError(undefined);
+            }}
             placeholder="Ej. Repasar para el examen"
             maxLength={500}
             error={error}
           />
           <fieldset>
-            <legend className="mb-2 text-sm font-extrabold">¿Cuánto tiempo?</legend>
-            <div className="flex flex-wrap gap-2">
+            <legend className="sr-only">¿Cuánto tiempo?</legend>
+            <div className="grid grid-cols-4 gap-1.5">
               {DURACIONES.map((m) => (
                 <button
                   key={m}
                   type="button"
                   aria-pressed={minutos === m}
+                  aria-label={`${m} minutos`}
                   onClick={() => setMinutos(m)}
-                  className="inline-flex min-h-11 items-center rounded-full border-2 border-b-4 border-borde bg-tarjeta px-4 font-bold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-violeta aria-pressed:bg-violeta-suave aria-pressed:text-violeta-texto"
+                  className="min-h-11 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta text-sm font-extrabold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-violeta aria-pressed:bg-violeta-suave aria-pressed:text-violeta-texto"
                 >
                   {m} min
                 </button>
               ))}
             </div>
           </fieldset>
-          <SelectorCategoria valor={categoria} onCambiar={setCategoria} />
+          {verCategoria ? (
+            <SelectorCategoria valor={categoria} onCambiar={setCategoria} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setVerCategoria(true)}
+              aria-expanded={false}
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-extrabold text-texto-suave hover:text-violeta-texto"
+            >
+              <Plus className="size-4" strokeWidth={3} aria-hidden />
+              Categoría <span className="font-medium">(opcional)</span>
+            </button>
+          )}
           <Boton type="submit" className="w-full">
             <Play className="size-5" strokeWidth={2.5} aria-hidden />
             Empezar

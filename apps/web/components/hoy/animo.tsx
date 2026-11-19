@@ -11,7 +11,8 @@ import {
   type EtiquetaAnimo,
 } from "@diarco/shared";
 import { useAnimo, useAnimoRango, useGuardarAnimo, useHabitos, useHoy, useRachas } from "@diarco/shared/hooks";
-import { Sparkles } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
+import { useState } from "react";
 import { Chispa } from "@/components/chispa";
 import { claseTarjeta, MensajeError } from "@/components/ui/estados";
 
@@ -41,6 +42,8 @@ export function Animo() {
   const historial = useAnimoRango(desde, hoy);
   const { data: rachas } = useRachas();
   const { data: habitos = [] } = useHabitos();
+
+  const [verEtiquetas, setVerEtiquetas] = useState(false);
 
   // Lo que se muestra mientras se guarda (actualización optimista).
   const pendiente = guardar.isPending ? guardar.variables : undefined;
@@ -100,12 +103,44 @@ export function Animo() {
         ))}
       </div>
 
-      {/* Qué influyó: solo después de elegir cómo te sientes */}
-      {nivel && (
+      {/* Qué influyó: opcional y plegado, para no saturar; muestra lo elegido */}
+      {nivel && !verEtiquetas && (
+        <button
+          type="button"
+          onClick={() => setVerEtiquetas(true)}
+          aria-expanded={false}
+          className="flex min-h-11 w-full items-center gap-2 rounded-2xl border-2 border-dashed border-borde-fuerte px-3 text-left text-sm font-extrabold text-texto-suave transition-colors hover:border-violeta/60 hover:text-violeta-texto"
+        >
+          <Plus className="size-4 shrink-0" strokeWidth={3} aria-hidden />
+          {etiquetas.length === 0 ? (
+            <span>¿Qué influyó? (opcional)</span>
+          ) : (
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate">
+                {etiquetas.length === 1 ? "1 cosa influyó" : `${etiquetas.length} cosas influyeron`}
+              </span>
+              <span aria-hidden>
+                {etiquetas.map((id) => ETIQUETAS_ANIMO.find((e) => e.id === id)?.emoji).join(" ")}
+              </span>
+            </span>
+          )}
+        </button>
+      )}
+      {nivel && verEtiquetas && (
         <fieldset className="animate-entrar">
-          <legend className="mb-2 text-sm font-extrabold">
-            ¿Qué influyó? <span className="font-medium text-texto-suave">(opcional, hasta {MAX_ETIQUETAS_ANIMO})</span>
+          <legend className="mb-2 flex w-full items-center justify-between text-sm font-extrabold">
+            <span>
+              ¿Qué influyó? <span className="font-medium text-texto-suave">(hasta {MAX_ETIQUETAS_ANIMO})</span>
+            </span>
           </legend>
+          <button
+            type="button"
+            onClick={() => setVerEtiquetas(false)}
+            aria-expanded
+            className="-mt-1 mb-2 min-h-9 text-sm font-extrabold text-violeta-texto"
+          >
+            Listo
+          </button>
           <div className="flex flex-wrap gap-1.5">
             {ETIQUETAS_ANIMO.map((e) => {
               const activa = etiquetas.includes(e.id);
@@ -128,9 +163,9 @@ export function Animo() {
       )}
 
       {/* Tus últimos 7 días */}
-      <div>
-        <p className="mb-1.5 text-sm font-extrabold text-texto-suave">Tus últimos 7 días</p>
-        <ol className="grid grid-cols-7 gap-1">
+      <div className="flex items-center gap-2">
+        <p className="w-14 shrink-0 text-xs leading-tight font-extrabold text-texto-suave">Últimos 7 días</p>
+        <ol className="grid flex-1 grid-cols-7 gap-1">
           {semana.map((fecha) => {
             const n = porFecha.get(fecha);
             const cara = NIVELES.find((x) => x.nivel === n);
