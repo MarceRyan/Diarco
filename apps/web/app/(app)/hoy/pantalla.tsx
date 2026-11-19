@@ -31,6 +31,7 @@ import { SemanaRacha } from "@/components/hoy/semana-racha";
 import { ChipCategoria } from "@/components/categorias";
 import { Chispa, estadoChispa, type EstadoChispa } from "@/components/chispa";
 import { ChispaViva } from "@/components/chispa-viva";
+import { VentanaChispa } from "@/components/casa-chispa/panel";
 import { Confeti } from "@/components/confeti";
 import { NotaHabito } from "@/components/nota-habito";
 import { InsigniaRacha } from "@/components/racha";
@@ -79,6 +80,7 @@ export function PantallaHoy() {
           <TuDia />
         </div>
         <div className="min-w-0 space-y-6 xl:sticky xl:top-10">
+          <VentanaChispa />
           <Animo />
           <Enfoque />
         </div>
