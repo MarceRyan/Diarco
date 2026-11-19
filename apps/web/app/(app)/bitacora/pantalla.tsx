@@ -1,17 +1,51 @@
 "use client";
 
 import { compararFechas, esFechaValida, minutosPorCategoria, sumarDias, type Actividad } from "@diarco/shared";
-import { useActividades, useCategorias, useHoy } from "@diarco/shared/hooks";
-import { CalendarDays, ChevronLeft, ChevronRight, NotebookPen, Plus } from "lucide-react";
+import { useActividades, useCategorias, useHabitos, useHoy, useNotasDia } from "@diarco/shared/hooks";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, NotebookPen, Plus } from "lucide-react";
 import { useState } from "react";
 import { ChipCategoria } from "@/components/categorias";
+import { NotaHabito } from "@/components/nota-habito";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { CargandoLista, claseTarjeta, Encabezado, EstadoVacio, MensajeError } from "@/components/ui/estados";
-import { duracion, fechaLarga, horaCorta } from "@/lib/formato";
+import { cuandoFue, duracion, fechaLarga, horaCorta } from "@/lib/formato";
 import { FormularioActividad } from "./formulario-actividad";
 
 type Edicion = { actividad?: Actividad } | null;
+
+/** Hábitos cumplidos ese día, con su nota de "qué hiciste" (editable desde aquí). */
+function HabitosDelDia({ fecha, hoy }: { fecha: string; hoy: string }) {
+  const { data: notas } = useNotasDia(fecha);
+  const { data: habitos = [] } = useHabitos();
+  if (!notas || notas.size === 0) return null;
+  const cumplidos = habitos.filter((h) => notas.has(h.id));
+  if (cumplidos.length === 0) return null;
+
+  return (
+    <section aria-labelledby="titulo-habitos-dia" className={`${claseTarjeta} mb-5 p-4`}>
+      <h2 id="titulo-habitos-dia" className="mb-3 flex items-center gap-2 font-titulo text-xl font-bold">
+        <span className="flex size-7 items-center justify-center rounded-full bg-verde text-white" aria-hidden>
+          <Check className="size-4" strokeWidth={3.5} />
+        </span>
+        {cumplidos.length === 1 ? "Cumpliste 1 hábito" : `Cumpliste ${cumplidos.length} hábitos`}
+      </h2>
+      <ul className="space-y-3">
+        {cumplidos.map((h) => (
+          <li key={h.id} className="space-y-1">
+            <p className="flex items-center gap-2 font-bold">
+              <span className="text-xl" aria-hidden>
+                {h.icono}
+              </span>
+              {h.nombre}
+            </p>
+            <NotaHabito habito={h} fecha={fecha} nota={notas.get(h.id)} cuando={fecha === hoy ? undefined : cuandoFue(fecha, hoy)} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export function PantallaBitacora() {
   const hoy = useHoy();
@@ -70,6 +104,8 @@ export function PantallaBitacora() {
           Volver a hoy
         </button>
       )}
+
+      <HabitosDelDia fecha={fecha} hoy={hoy} />
 
       {actividades.isPending ? (
         <CargandoLista filas={3} alto="h-20" />

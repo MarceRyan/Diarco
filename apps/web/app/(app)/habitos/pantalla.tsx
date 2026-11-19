@@ -136,7 +136,7 @@ function TarjetaHabito({
 
       {/* Activo: últimos 7 días, tocables para corregir olvidos. En pausa: solo los días programados. */}
       {habito.activo ? (
-        <TiraDias habitoId={habito.id} nombre={habito.nombre} />
+        <TiraDias habito={habito} />
       ) : (
         <ul className="flex gap-1" aria-label={`Días: ${SEMANA.filter((d) => dias.has(d.valor)).map((d) => d.nombre).join(", ")}`}>
           {SEMANA.map((d) => (

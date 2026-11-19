@@ -30,6 +30,17 @@ export function porcentaje(fraccion: number): string {
   return `${Math.round(fraccion * 100)} %`;
 }
 
+const formatoDiaSemana = new Intl.DateTimeFormat("es", { weekday: "long", day: "numeric", timeZone: "UTC" });
+
+/** "el martes 17" (o "ayer" / "hoy" si corresponde). */
+export function cuandoFue(fecha: Fecha, hoy: Fecha): string {
+  if (fecha === hoy) return "hoy";
+  const ayer = new Date(`${hoy}T00:00:00Z`);
+  ayer.setUTCDate(ayer.getUTCDate() - 1);
+  if (fecha === ayer.toISOString().slice(0, 10)) return "ayer";
+  return `el ${formatoDiaSemana.format(aDate(fecha))}`;
+}
+
 /** "08:00:00" → "08:00" */
 export function horaCorta(hora: string): string {
   return hora.slice(0, 5);

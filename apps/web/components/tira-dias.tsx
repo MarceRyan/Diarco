@@ -1,9 +1,11 @@
 "use client";
 
-import { diaSemana, historialReciente, type DiaHistorial } from "@diarco/shared";
-import { useHoy, useMarcarHabito, useRachas } from "@diarco/shared/hooks";
+import { diaSemana, historialReciente, type DiaHistorial, type Fecha, type Habito } from "@diarco/shared";
+import { useHoy, useMarcarHabito, useNotasDia, useRachas } from "@diarco/shared/hooks";
 import { Check } from "lucide-react";
-import { fechaLarga } from "@/lib/formato";
+import { useState } from "react";
+import { cuandoFue, fechaLarga } from "@/lib/formato";
+import { NotaHabito } from "./nota-habito";
 
 const LETRAS = ["D", "L", "M", "X", "J", "V", "S"];
 
@@ -19,12 +21,22 @@ const DESCRIPCION: Record<DiaHistorial["estado"], string> = {
  * Los últimos 7 días de un hábito, tocables para corregir olvidos
  * (por ejemplo, marcar ayer). Los días no programados no se pueden marcar.
  */
-export function TiraDias({ habitoId, nombre }: { habitoId: number; nombre: string }) {
+export function TiraDias({ habito }: { habito: Habito }) {
+  const { id: habitoId, nombre } = habito;
   const hoy = useHoy();
   const { data: rachas } = useRachas();
   const marcar = useMarcarHabito();
+  // Último día pasado que se marcó aquí: debajo se ofrece la nota de ese día.
+  const [diaNota, setDiaNota] = useState<Fecha | null>(null);
+  const { data: notas } = useNotasDia(diaNota ?? hoy);
   const info = rachas?.activos.find((a) => a.id === habitoId);
   if (!info) return <div className="h-14" aria-hidden />;
+
+  function alternar(fecha: Fecha, hecho: boolean) {
+    marcar.mutate({ habitoId, fecha, completado: !hecho });
+    // Al marcar un día pasado, ofrecer la nota; al desmarcarlo, ocultarla.
+    if (fecha !== hoy) setDiaNota(hecho ? null : fecha);
+  }
 
   const dias = historialReciente({ ...info, hoy });
 
@@ -56,7 +68,7 @@ export function TiraDias({ habitoId, nombre }: { habitoId: number; nombre: strin
                 aria-pressed={hecho}
                 aria-label={etiqueta}
                 title={etiqueta}
-                onClick={() => marcar.mutate({ habitoId, fecha: d.fecha, completado: !hecho })}
+                onClick={() => alternar(d.fecha, hecho)}
                 className={`${base} border-2 border-b-4 active:translate-y-[2px] active:border-b-2 ${
                   hecho
                     ? "border-verde-labio bg-verde text-white"
@@ -73,6 +85,11 @@ export function TiraDias({ habitoId, nombre }: { habitoId: number; nombre: strin
         })}
       </ul>
       {marcar.error && <p className="mt-1 text-sm font-bold text-peligro-texto">¡Uy! {marcar.error.message}</p>}
+      {diaNota && info.completados.has(diaNota) && (
+        <div className="mt-2 animate-entrar">
+          <NotaHabito habito={habito} fecha={diaNota} nota={notas?.get(habitoId)} cuando={cuandoFue(diaNota, hoy)} />
+        </div>
+      )}
     </div>
   );
 }

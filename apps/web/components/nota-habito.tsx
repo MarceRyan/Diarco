@@ -12,7 +12,18 @@ const MAXIMO = 280;
  * Nota opcional de "qué hiciste" para un hábito cumplido. Se despliega en línea
  * (sin ventana emergente) solo si la persona quiere escribirla.
  */
-export function NotaHabito({ habito, fecha, nota }: { habito: Habito; fecha: Fecha; nota: string | null | undefined }) {
+export function NotaHabito({
+  habito,
+  fecha,
+  nota,
+  cuando,
+}: {
+  habito: Habito;
+  fecha: Fecha;
+  nota: string | null | undefined;
+  /** Texto del día cuando no es hoy, ej. "el martes 17". */
+  cuando?: string;
+}) {
   const guardar = useGuardarNota();
   const id = useId();
   const [editando, setEditando] = useState(false);
@@ -50,7 +61,7 @@ export function NotaHabito({ habito, fecha, nota }: { habito: Habito; fecha: Fec
         className="inline-flex min-h-11 items-center gap-1.5 px-1 font-bold text-texto-suave transition-colors hover:text-violeta-texto"
       >
         <PenLine className="size-4" strokeWidth={2.5} aria-hidden />
-        ¿Qué hiciste? <span className="font-medium">(opcional)</span>
+        ¿Qué hiciste{cuando ? ` ${cuando}` : ""}? <span className="font-medium">(opcional)</span>
       </button>
     );
   }
@@ -58,7 +69,7 @@ export function NotaHabito({ habito, fecha, nota }: { habito: Habito; fecha: Fec
   return (
     <div className="space-y-2 rounded-2xl border-2 border-violeta/40 bg-violeta-suave p-3">
       <label htmlFor={id} className="text-sm font-extrabold">
-        ¿Qué hiciste con «{habito.nombre}»?
+        ¿Qué hiciste con «{habito.nombre}»{cuando ? ` ${cuando}` : ""}?
       </label>
       <textarea
         id={id}

@@ -1,110 +1,95 @@
 "use client";
 
-import { diaSemana, type BloqueHorario, type Categoria } from "@diarco/shared";
-import { useBloques, useCategorias, useHoy } from "@diarco/shared/hooks";
-import { CalendarClock, Plus } from "lucide-react";
-import { useState } from "react";
+import {
+  diaSemana,
+  distribuirBloques,
+  horaActual,
+  horaAMinutos,
+  inicioSemana,
+  minutosAHora,
+  rangoHorasDia,
+  sumarDias,
+  type BloqueHorario,
+  type Categoria,
+} from "@diarco/shared";
+import { useBloques, useCategorias, useHoy, useZonaHoraria } from "@diarco/shared/hooks";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
-import { CargandoLista, claseTarjeta, Encabezado, EstadoVacio, MensajeError } from "@/components/ui/estados";
-import { horaCorta } from "@/lib/formato";
+import { CargandoLista, claseTarjeta, Encabezado, MensajeError } from "@/components/ui/estados";
+import { duracion, horaCorta } from "@/lib/formato";
 import { FormularioBloque } from "./formulario-bloque";
 
-/** Lunes a domingo (valor 0 = domingo). */
-const DIAS = [
-  { valor: 1, corto: "Lun", largo: "Lunes" },
-  { valor: 2, corto: "Mar", largo: "Martes" },
-  { valor: 3, corto: "Mié", largo: "Miércoles" },
-  { valor: 4, corto: "Jue", largo: "Jueves" },
-  { valor: 5, corto: "Vie", largo: "Viernes" },
-  { valor: 6, corto: "Sáb", largo: "Sábado" },
-  { valor: 0, corto: "Dom", largo: "Domingo" },
-];
+const NOMBRES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const CORTOS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-type Edicion = { bloque?: BloqueHorario; dia: number } | null;
+/** Alto en píxeles de una hora en la línea de tiempo. */
+const PX_POR_HORA = 64;
+/** Alto mínimo de un bloque para que se pueda tocar y leer (44 px de objetivo táctil). */
+const ALTO_MINIMO = 48;
+
+type Edicion = { bloque?: BloqueHorario; dia: number; inicio?: string } | null;
 
 export function PantallaHorario() {
   const hoy = useHoy();
   const bloques = useBloques();
   const { data: categorias = [] } = useCategorias();
-  const [diaMovil, setDiaMovil] = useState<number>(() => diaSemana(hoy));
+  const [dia, setDia] = useState<number>(() => diaSemana(hoy));
   const [edicion, setEdicion] = useState<Edicion>(null);
-  const diaHoy = diaSemana(hoy);
 
-  const delDia = (dia: number) => bloques.data?.filter((b) => b.dias_semana.includes(dia)) ?? [];
+  const delDia = (d: number) => bloques.data?.filter((b) => b.dias_semana.includes(d)) ?? [];
   const categoriaDe = (b: BloqueHorario) => categorias.find((c) => c.id === b.categoria_id);
-
-  const botonNuevo = (
-    <Boton onClick={() => setEdicion({ dia: diaMovil })}>
-      <Plus className="size-5" strokeWidth={3} aria-hidden />
-      Agregar bloque
-    </Boton>
-  );
+  const bloquesDia = delDia(dia);
+  const minutosDia = bloquesDia.reduce((t, b) => t + horaAMinutos(b.fin) - horaAMinutos(b.inicio), 0);
 
   return (
     <>
-      <Encabezado titulo="Tu semana" subtitulo="Organiza tu horario bloque por bloque." accion={botonNuevo} />
+      <Encabezado
+        titulo="Tu semana"
+        subtitulo="Toca un día para ver su agenda; toca una hora libre para agregar algo."
+        accion={
+          <Boton onClick={() => setEdicion({ dia })}>
+            <Plus className="size-5" strokeWidth={3} aria-hidden />
+            Agregar bloque
+          </Boton>
+        }
+      />
 
       {bloques.isPending ? (
-        <CargandoLista filas={4} alto="h-16" />
+        <CargandoLista filas={4} alto="h-20" />
       ) : bloques.error ? (
         <MensajeError error={bloques.error} onReintentar={() => bloques.refetch()} />
-      ) : bloques.data.length === 0 ? (
-        <EstadoVacio
-          icono={<CalendarClock className="size-7" strokeWidth={2.5} />}
-          titulo="Arma tu semana"
-          descripcion="Agrega bloques como trabajo, clases o ejercicio. Se repiten cada semana en los días que elijas."
-          accion={botonNuevo}
-        />
       ) : (
-        <>
-          {/* Móvil: un día a la vez */}
-          <div className="md:hidden">
-            <div role="group" aria-label="Día de la semana" className="mb-4 grid grid-cols-7 gap-1.5">
-              {DIAS.map((d) => (
-                <button
-                  key={d.valor}
-                  type="button"
-                  aria-pressed={diaMovil === d.valor}
-                  aria-label={d.largo}
-                  onClick={() => setDiaMovil(d.valor)}
-                  className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 border-b-4 text-sm font-extrabold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-cielo-labio aria-pressed:bg-cielo aria-pressed:text-white ${
-                    d.valor === diaHoy ? "border-cielo/50 bg-cielo-suave text-cielo-texto" : "border-borde bg-tarjeta text-texto-suave"
-                  }`}
-                >
-                  {d.corto}
-                  {d.valor === diaHoy && <span className="text-[10px] leading-none">hoy</span>}
-                </button>
-              ))}
-            </div>
-            <ListaDia
-              bloques={delDia(diaMovil)}
-              categoriaDe={categoriaDe}
-              onEditar={(bloque) => setEdicion({ bloque, dia: diaMovil })}
-            />
-          </div>
+        <div className="space-y-5">
+          <SelectorSemana hoy={hoy} dia={dia} onElegir={setDia} delDia={delDia} categoriaDe={categoriaDe} />
 
-          {/* Escritorio: la semana completa */}
-          <div className="hidden grid-cols-7 gap-2 md:grid">
-            {DIAS.map((d) => (
-              <section key={d.valor} aria-label={d.largo} className="min-w-0">
-                <h2
-                  className={`mb-2 rounded-xl py-1.5 text-center font-extrabold ${
-                    d.valor === diaHoy ? "bg-cielo text-white" : "text-texto-suave"
-                  }`}
-                >
-                  {d.corto}
-                </h2>
-                <ListaDia
-                  compacta
-                  bloques={delDia(d.valor)}
-                  categoriaDe={categoriaDe}
-                  onEditar={(bloque) => setEdicion({ bloque, dia: d.valor })}
-                />
-              </section>
-            ))}
-          </div>
-        </>
+          <section aria-labelledby="titulo-dia" className={`${claseTarjeta} p-4 sm:p-5`}>
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="titulo-dia" className="font-titulo text-2xl font-bold">
+                {NOMBRES[dia]}
+                {dia === diaSemana(hoy) && <span className="ml-2 text-base text-cielo-texto">· hoy</span>}
+              </h2>
+              <p className="font-bold text-texto-suave">
+                {bloquesDia.length === 0
+                  ? "Día libre 🌤️"
+                  : `${bloquesDia.length} ${bloquesDia.length === 1 ? "bloque" : "bloques"} · ${duracion(minutosDia)}`}
+              </p>
+            </div>
+            {bloquesDia.length === 0 && (
+              <p className="mb-4 rounded-2xl bg-cielo-suave px-4 py-3 font-bold text-cielo-texto">
+                Nada agendado. Toca cualquier hora para agregar un bloque.
+              </p>
+            )}
+            <LineaTiempo
+              bloques={bloquesDia}
+              categoriaDe={categoriaDe}
+              esHoy={dia === diaSemana(hoy)}
+              onEditar={(bloque) => setEdicion({ bloque, dia })}
+              onNuevo={(inicio) => setEdicion({ dia, inicio })}
+            />
+          </section>
+        </div>
       )}
 
       <Dialogo
@@ -114,9 +99,10 @@ export function PantallaHorario() {
       >
         {edicion && (
           <FormularioBloque
-            key={edicion.bloque?.id ?? "nuevo"}
+            key={edicion.bloque?.id ?? `nuevo-${edicion.dia}-${edicion.inicio ?? ""}`}
             bloque={edicion.bloque}
             diaInicial={edicion.dia}
+            inicioInicial={edicion.inicio}
             onListo={() => setEdicion(null)}
           />
         )}
@@ -125,55 +111,173 @@ export function PantallaHorario() {
   );
 }
 
-function ListaDia({
+// -----------------------------------------------------------------------------
+// Semana: 7 tarjetas de día con puntitos de sus bloques
+// -----------------------------------------------------------------------------
+export function SelectorSemana({
+  hoy,
+  dia,
+  onElegir,
+  delDia,
+  categoriaDe,
+}: {
+  hoy: string;
+  dia: number;
+  onElegir: (d: number) => void;
+  delDia: (d: number) => BloqueHorario[];
+  categoriaDe: (b: BloqueHorario) => Categoria | undefined;
+}) {
+  const lunes = inicioSemana(hoy);
+  const fechas = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
+
+  return (
+    <div role="group" aria-label="Día de la semana" className="grid grid-cols-7 gap-1.5 sm:gap-2">
+      {fechas.map((fecha) => {
+        const d = diaSemana(fecha);
+        const esHoy = fecha === hoy;
+        const elegido = d === dia;
+        const lista = delDia(d);
+        return (
+          <button
+            key={fecha}
+            type="button"
+            aria-pressed={elegido}
+            aria-label={`${NOMBRES[d]} ${Number(fecha.slice(8))}${esHoy ? ", hoy" : ""}: ${lista.length} ${lista.length === 1 ? "bloque" : "bloques"}`}
+            onClick={() => onElegir(d)}
+            className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-[18px] border-2 border-b-4 transition-transform duration-100 active:translate-y-[2px] active:border-b-2 ${
+              elegido
+                ? "border-cielo-labio bg-cielo text-white"
+                : esHoy
+                  ? "border-cielo/50 bg-cielo-suave text-cielo-texto"
+                  : "border-borde bg-tarjeta text-texto-suave"
+            }`}
+          >
+            <span className="text-xs font-extrabold">{CORTOS[d]}</span>
+            <span className={`font-titulo text-2xl leading-none font-bold ${elegido ? "" : "text-texto"}`}>{Number(fecha.slice(8))}</span>
+            <span className="flex h-2 gap-0.5" aria-hidden>
+              {lista.slice(0, 4).map((b) => (
+                <span
+                  key={b.id}
+                  className={`size-1.5 rounded-full ${elegido ? "ring-1 ring-white" : ""}`}
+                  style={{ backgroundColor: categoriaDe(b)?.color ?? "var(--cielo)" }}
+                />
+              ))}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Línea de tiempo del día
+// -----------------------------------------------------------------------------
+/** Minuto actual del día en la zona del usuario; null hasta montar (evita desajustes de hidratación). */
+function useMinutoActual(): number | null {
+  const zona = useZonaHoraria();
+  const [ahora, setAhora] = useState<number | null>(null);
+  useEffect(() => {
+    const actualizar = () => setAhora(horaAMinutos(horaActual(zona)));
+    actualizar();
+    const t = setInterval(actualizar, 60_000);
+    return () => clearInterval(t);
+  }, [zona]);
+  return ahora;
+}
+
+export function LineaTiempo({
   bloques,
   categoriaDe,
+  esHoy,
   onEditar,
-  compacta = false,
+  onNuevo,
 }: {
   bloques: BloqueHorario[];
   categoriaDe: (b: BloqueHorario) => Categoria | undefined;
+  esHoy: boolean;
   onEditar: (b: BloqueHorario) => void;
-  compacta?: boolean;
+  onNuevo: (inicio: string) => void;
 }) {
-  if (bloques.length === 0) {
-    return compacta ? (
-      <p className="py-4 text-center text-texto-suave" aria-label="Sin bloques">
-        —
-      </p>
-    ) : (
-      <p className={`${claseTarjeta} p-5 text-center text-texto-suave`}>Día libre. ¡Disfrútalo! 🌤️</p>
-    );
-  }
+  const ahora = useMinutoActual();
+  const [desde, hasta] = rangoHorasDia(bloques);
+  const horas = Array.from({ length: hasta - desde }, (_, i) => desde + i);
+  const y = (minutos: number) => (minutos / 60 - desde) * PX_POR_HORA;
+  const distribuidos = distribuirBloques(bloques);
+  const mostrarAhora = esHoy && ahora !== null && ahora >= desde * 60 && ahora <= hasta * 60;
+
   return (
-    <ol className="space-y-2">
-      {bloques.map((b) => {
-        const categoria = categoriaDe(b);
-        return (
-          <li key={b.id}>
+    <div className="relative" style={{ height: (hasta - desde) * PX_POR_HORA }}>
+      {/* Filas de hora: cada una es un botón para agregar un bloque a esa hora */}
+      {horas.map((h) => (
+        <button
+          key={h}
+          type="button"
+          onClick={() => onNuevo(minutosAHora(h * 60))}
+          aria-label={`Agregar bloque a las ${minutosAHora(h * 60)}`}
+          className="group absolute inset-x-0 flex items-start border-t-2 border-borde text-left"
+          style={{ top: y(h * 60), height: PX_POR_HORA }}
+        >
+          <span className="w-14 shrink-0 -translate-y-2.5 bg-tarjeta pr-2 text-xs font-extrabold text-texto-suave tabular-nums">
+            {minutosAHora(h * 60)}
+          </span>
+          <span className="mt-2 ml-2 hidden items-center gap-1 rounded-full bg-cielo-suave px-2.5 py-1 text-xs font-extrabold text-cielo-texto group-hover:inline-flex group-focus-visible:inline-flex">
+            <Plus className="size-3.5" strokeWidth={3} aria-hidden />
+            Agregar
+          </span>
+        </button>
+      ))}
+
+      {/* Bloques, del alto de su duración y lado a lado si se pisan */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 left-16">
+        {distribuidos.map(({ bloque, inicio, fin, carril, carriles }) => {
+          const categoria = categoriaDe(bloque);
+          const color = categoria?.color ?? "#2f9ff0";
+          const alto = Math.max(((fin - inicio) / 60) * PX_POR_HORA, ALTO_MINIMO) - 4;
+          const corto = alto < 72;
+          const angosto = carriles > 1;
+          return (
             <button
+              key={bloque.id}
               type="button"
-              onClick={() => onEditar(b)}
-              aria-label={`${b.titulo}, de ${horaCorta(b.inicio)} a ${horaCorta(b.fin)}. Editar`}
-              className={`${claseTarjeta} w-full text-left transition-transform duration-100 hover:border-borde-fuerte active:translate-y-[2px] active:border-b-2 ${
-                compacta ? "p-2.5" : "flex items-center gap-3 p-3"
-              }`}
+              onClick={() => onEditar(bloque)}
+              aria-label={`${bloque.titulo}, de ${horaCorta(bloque.inicio)} a ${horaCorta(bloque.fin)}${categoria ? `, ${categoria.nombre}` : ""}. Editar`}
+              className="pointer-events-auto absolute flex flex-col justify-start overflow-hidden rounded-2xl border-2 border-b-4 px-3 py-1.5 text-left transition-transform duration-100 hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2"
+              style={{
+                top: y(inicio) + 2,
+                height: alto,
+                left: `calc(${(carril / carriles) * 100}% + ${carril > 0 ? 3 : 0}px)`,
+                width: `calc(${100 / carriles}% - ${carriles > 1 ? 3 : 0}px)`,
+                backgroundColor: `color-mix(in oklab, ${color} 16%, var(--tarjeta))`,
+                borderColor: `color-mix(in oklab, ${color} 45%, var(--tarjeta))`,
+              }}
             >
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-lg bg-cielo-suave font-extrabold text-cielo-texto tabular-nums ${
-                  compacta ? "px-1.5 py-0.5 text-[11px]" : "shrink-0 px-2.5 py-1 text-sm"
-                }`}
-              >
-                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: categoria?.color ?? "var(--cielo)" }} aria-hidden />
-                {horaCorta(b.inicio)}
-                {!compacta && `–${horaCorta(b.fin)}`}
+              <span className={`flex gap-x-2 ${corto ? "items-center" : "flex-col"}`}>
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+                  <span className="truncate font-titulo text-lg leading-tight font-bold">{bloque.titulo}</span>
+                </span>
+                {/* En carriles angostos y bloques cortos, el título tiene prioridad sobre la hora */}
+                {!(corto && angosto) && (
+                  <span className="truncate text-sm font-bold text-texto-suave tabular-nums">
+                    {horaCorta(bloque.inicio)}–{horaCorta(bloque.fin)}
+                    {!corto && !angosto && categoria ? ` · ${categoria.nombre}` : ""}
+                  </span>
+                )}
               </span>
-              <span className={`block font-bold ${compacta ? "mt-1 text-sm break-words" : "min-w-0 flex-1 truncate"}`}>{b.titulo}</span>
-              {categoria && !compacta && <span className="shrink-0 text-sm text-texto-suave">{categoria.nombre}</span>}
             </button>
-          </li>
-        );
-      })}
-    </ol>
+          );
+        })}
+      </div>
+
+      {/* Línea de "ahora" */}
+      {mostrarAhora && (
+        <div className="pointer-events-none absolute right-0 left-12 flex items-center" style={{ top: y(ahora!) - 5 }} aria-hidden>
+          <span className="size-2.5 rounded-full bg-mandarina ring-2 ring-tarjeta" />
+          <span className="h-0.5 flex-1 bg-mandarina" />
+          <span className="ml-1 rounded-full bg-mandarina px-2 py-0.5 text-[11px] font-extrabold text-white">Ahora</span>
+        </div>
+      )}
+    </div>
   );
 }

@@ -24,10 +24,13 @@ const DURACIONES = [30, 45, 60, 90, 120, 180];
 export function FormularioBloque({
   bloque,
   diaInicial,
+  inicioInicial,
   onListo,
 }: {
   bloque?: BloqueHorario;
   diaInicial: number;
+  /** Hora "HH:MM" con la que empieza un bloque nuevo (al tocar una hora libre). */
+  inicioInicial?: string;
   onListo: () => void;
 }) {
   const crear = useCrearBloque();
@@ -37,8 +40,12 @@ export function FormularioBloque({
 
   const [titulo, setTitulo] = useState(bloque?.titulo ?? "");
   const [dias, setDias] = useState<number[]>(bloque?.dias_semana ?? [diaInicial]);
-  const [inicio, setInicio] = useState(bloque ? horaCorta(bloque.inicio) : "09:00");
-  const [fin, setFin] = useState(bloque ? horaCorta(bloque.fin) : "10:00");
+  const [inicio, setInicio] = useState(bloque ? horaCorta(bloque.inicio) : (inicioInicial ?? "09:00"));
+  const [fin, setFin] = useState(() =>
+    bloque
+      ? horaCorta(bloque.fin)
+      : minutosAHora(Math.min(horaAMinutos(inicioInicial ?? "09:00") + 60, ULTIMO_MINUTO_DEL_DIA)),
+  );
   const [categoria, setCategoria] = useState<number | null>(bloque?.categoria_id ?? null);
   const [errores, setErrores] = useState<Record<string, string>>({});
 
