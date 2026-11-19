@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // @huella/shared se publica como código TypeScript fuente; Next lo compila.
-  transpilePackages: ["@huella/shared"],
+  // @diarco/shared se publica como código TypeScript fuente; Next lo compila.
+  transpilePackages: ["@diarco/shared"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

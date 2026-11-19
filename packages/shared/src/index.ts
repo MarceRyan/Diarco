@@ -1,5 +1,5 @@
 /**
- * Punto de entrada de @huella/shared.
+ * Punto de entrada de @diarco/shared.
  * Toda la lógica de negocio vive aquí; web y móvil solo la consumen.
  */
 export * from "./constantes";

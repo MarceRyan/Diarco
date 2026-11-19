@@ -1,5 +1,5 @@
 {
-  "name": "@huella/shared",
+  "name": "@diarco/shared",
   "version": "0.1.0",
   "private": true,
   "description": "Tipos, esquemas Zod y lógica de negocio (rachas, estadísticas, logros) compartidos por web y móvil.",

@@ -1,7 +1,7 @@
-# Huella — guía del proyecto para Claude Code
+# Diarco — guía del proyecto para Claude Code
 
 ## Qué es
-Huella es una app web y móvil para registrar lo que hago en el día (bitácora), organizar mi horario semanal y marcar hábitos diarios con rachas, estadísticas y logros.
+Diarco es una app web y móvil para registrar lo que hago en el día (bitácora), organizar mi horario semanal y marcar hábitos diarios con rachas, estadísticas y logros.
 Es un proyecto personal y de portafolio: el código debe ser limpio, tipado y documentado.
 
 ## Cómo trabajar conmigo
@@ -16,13 +16,13 @@ Es un proyecto personal y de portafolio: el código debe ser limpio, tipado y do
 - Monorepo con pnpm workspaces + Turborepo.
 - `apps/web`: Next.js (App Router) + TypeScript + Tailwind CSS. Despliegue en Vercel.
 - `apps/mobile`: Expo (Expo Router) + TypeScript. Notificaciones con Expo Notifications.
-- `packages/shared` (`@huella/shared`): tipos, esquemas Zod, lógica de rachas/estadísticas/logros y consultas a Supabase. Pruebas con Vitest.
+- `packages/shared` (`@diarco/shared`): tipos, esquemas Zod, lógica de rachas/estadísticas/logros y consultas a Supabase. Pruebas con Vitest.
 - `supabase/`: migraciones SQL, políticas RLS, vistas, funciones y `seed.sql`. Supabase CLI para desarrollo local.
 - Datos en el cliente: TanStack Query. Gráficos: Recharts (web) y Victory Native (móvil).
 
 ## Estructura
 ```
-huella/
+diarco/
 ├── apps/web/          (app/(auth), app/(app)/hoy|habitos|horario|bitacora|estadisticas|logros|configuracion, components/, lib/supabase/, middleware.ts)
 ├── apps/mobile/       (src/app/(auth), src/app/(tabs)/hoy|habitos|horario|bitacora|perfil, src/components/, src/lib/)
 ├── packages/shared/   (src/types, src/schemas, src/logic/rachas.ts|estadisticas.ts|logros.ts, src/api, tests/)
@@ -45,7 +45,7 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 - Permisos explícitos (`GRANT`) solo a `authenticated`; `anon` no accede a nada.
 - Funciones RPC (security invoker, respetan RLS): `fecha_hoy()`, `cumplimiento_habitos(desde, hasta)`, `resumen_diario(desde, hasta)`.
   Solo preparan datos; el cálculo de rachas vive en `packages/shared`.
-- Usuario demo del seed: `demo@huella.local` / `huella123`.
+- Usuario demo del seed: `demo@diarco.local` / `diarco123`.
 
 ## Reglas de negocio
 - Racha de un hábito: días programados seguidos con registro completado. Los días no programados no rompen la racha.
@@ -75,9 +75,9 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 - `pnpm test` — pruebas de `packages/shared` (Vitest)
 - `pnpm typecheck` / `pnpm lint` / `pnpm build` — verificaciones de todo el monorepo
 - `pnpm db:start` / `pnpm db:reset` / `pnpm db:stop` — Supabase local (requiere Docker)
-- Dependencias de móvil: `pnpm --filter @huella/mobile exec expo install <paquete>` (no `pnpm add`)
+- Dependencias de móvil: `pnpm --filter @diarco/mobile exec expo install <paquete>` (no `pnpm add`)
 
 ## Notas de configuración
 - `.npmrc` usa `node-linker=hoisted` para compatibilidad con React Native.
-- `@huella/shared` se consume como TypeScript fuente (sin build); Next lo compila vía `transpilePackages`.
+- `@diarco/shared` se consume como TypeScript fuente (sin build); Next lo compila vía `transpilePackages`.
 - pnpm solo ejecuta scripts de instalación de los paquetes listados en `allowBuilds` (`pnpm-workspace.yaml`).

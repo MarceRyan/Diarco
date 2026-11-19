@@ -1,5 +1,5 @@
 -- =============================================================================
--- Huella · Seguridad
+-- Diarco · Seguridad
 -- 1. Permisos de tabla (GRANT): desde 2026 Supabase ya no expone tablas nuevas
 --    a la Data API automáticamente; hay que concederlas explícitamente.
 -- 2. RLS: cada usuario solo lee y escribe sus filas.
@@ -103,7 +103,7 @@ create policy "logros: ver catalogo" on public.logros
 
 -- -----------------------------------------------------------------------------
 -- usuario_logros: ver y registrar los propios (la lógica de cuándo se obtiene
--- un logro vive en @huella/shared). No se pueden editar ni borrar.
+-- un logro vive en @diarco/shared). No se pueden editar ni borrar.
 -- -----------------------------------------------------------------------------
 create policy "usuario_logros: ver propios" on public.usuario_logros
   for select to authenticated

@@ -1,4 +1,4 @@
-// Verifica migraciones, seed, RLS y restricciones de Huella sobre PGlite
+// Verifica migraciones, seed, RLS y restricciones de Diarco sobre PGlite
 // (PostgreSQL 17 en WebAssembly), sin necesidad de Docker.
 // Simula lo mínimo de Supabase: roles anon/authenticated, auth.users y auth.uid().
 // Uso: pnpm db:verificar
@@ -86,7 +86,7 @@ async function debeFallar(desc, uid, sql, p, patron) {
 
 // Segundo usuario: el trigger debe crearle el perfil.
 await db.query(
-  `insert into auth.users (id, email, raw_user_meta_data) values ($1, 'otro@huella.local', '{}')`,
+  `insert into auth.users (id, email, raw_user_meta_data) values ($1, 'otro@diarco.local', '{}')`,
   [OTRO],
 );
 

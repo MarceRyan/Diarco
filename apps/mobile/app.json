@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Huella",
-    "slug": "huella",
+    "name": "Diarco",
+    "slug": "diarco",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "huella",
+    "scheme": "diarco",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

@@ -1,8 +1,8 @@
 -- =============================================================================
--- Huella · Datos de ejemplo para desarrollo local
+-- Diarco · Datos de ejemplo para desarrollo local
 -- Se ejecuta automáticamente con `supabase db reset` después de las migraciones.
 --
--- Usuario demo:  demo@huella.local  /  huella123
+-- Usuario demo:  demo@diarco.local  /  diarco123
 --
 -- Las fechas son relativas a "hoy" en America/Lima, así que siempre hay rachas
 -- activas sin importar cuándo se ejecute el seed.
@@ -35,8 +35,8 @@ insert into auth.users (
   '00000000-0000-0000-0000-000000000000',
   'd3b07384-d9a0-4c9e-8f1a-000000000001',
   'authenticated', 'authenticated',
-  'demo@huella.local',
-  extensions.crypt('huella123', extensions.gen_salt('bf')),
+  'demo@diarco.local',
+  extensions.crypt('diarco123', extensions.gen_salt('bf')),
   now(),
   '{"provider": "email", "providers": ["email"]}',
   '{"nombre": "Demo"}',
@@ -52,7 +52,7 @@ insert into auth.identities (
   'd3b07384-d9a0-4c9e-8f1a-000000000001',
   'd3b07384-d9a0-4c9e-8f1a-000000000001',
   'email',
-  '{"sub": "d3b07384-d9a0-4c9e-8f1a-000000000001", "email": "demo@huella.local", "email_verified": true}',
+  '{"sub": "d3b07384-d9a0-4c9e-8f1a-000000000001", "email": "demo@diarco.local", "email_verified": true}',
   now(), now() - interval '60 days', now()
 );
 

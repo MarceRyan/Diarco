@@ -1,15 +1,15 @@
 {
-  "name": "huella",
+  "name": "diarco",
   "private": true,
-  "description": "Huella: bitácora diaria, horario semanal y hábitos con rachas (web + móvil).",
+  "description": "Diarco: bitácora diaria, horario semanal y hábitos con rachas (web + móvil).",
   "packageManager": "pnpm@12.21.0",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "dev": "turbo run dev",
-    "dev:web": "turbo run dev --filter=@huella/web",
-    "dev:mobile": "turbo run dev --filter=@huella/mobile",
+    "dev:web": "turbo run dev --filter=@diarco/web",
+    "dev:mobile": "turbo run dev --filter=@diarco/mobile",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

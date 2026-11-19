@@ -1,5 +1,5 @@
 -- =============================================================================
--- Huella · Esquema base
+-- Diarco · Esquema base
 -- Tablas, restricciones e índices. La seguridad (RLS, permisos) está en la
 -- siguiente migración y las funciones de rachas en la tercera.
 --

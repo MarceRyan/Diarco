@@ -1,5 +1,5 @@
 {
-  "name": "@huella/web",
+  "name": "@diarco/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@huella/shared": "workspace:*",
+    "@diarco/shared": "workspace:*",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"

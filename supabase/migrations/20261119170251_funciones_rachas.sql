@@ -1,8 +1,8 @@
 -- =============================================================================
--- Huella · Funciones de datos para rachas y estadísticas
+-- Diarco · Funciones de datos para rachas y estadísticas
 --
 -- La base de datos NO calcula rachas: esa regla (protector, "hoy aún no
--- cuenta", umbral del 70 %) vive en @huella/shared para tener una sola fuente
+-- cuenta", umbral del 70 %) vive en @diarco/shared para tener una sola fuente
 -- de verdad con pruebas. Aquí solo se preparan los datos que esa lógica usa.
 --
 -- Son funciones (no vistas) porque reciben un rango de fechas: así no se
