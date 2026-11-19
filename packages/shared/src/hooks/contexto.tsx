@@ -38,6 +38,8 @@ export const claves = {
   habitos: ["habitos"] as const,
   completados: ["completados"] as const,
   completadosRango: (desde: Fecha, hasta: Fecha) => ["completados", desde, hasta] as const,
+  // Cuelga de "completados": marcar o desmarcar un hábito también lo refresca.
+  registrosDia: (fecha: Fecha) => ["completados", "dia", fecha] as const,
   resumen: ["resumen"] as const,
   resumenRango: (desde: Fecha, hasta: Fecha) => ["resumen", desde, hasta] as const,
   // Cuelga de "resumen": marcar un hábito también lo invalida.

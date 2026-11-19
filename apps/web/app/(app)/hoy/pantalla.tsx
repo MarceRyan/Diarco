@@ -18,6 +18,7 @@ import {
   useHabitos,
   useHoy,
   useMarcarHabito,
+  useNotasDia,
   usePerfil,
   useRachas,
 } from "@diarco/shared/hooks";
@@ -28,6 +29,7 @@ import { Bienvenida } from "@/components/bienvenida";
 import { ChipCategoria } from "@/components/categorias";
 import { Chispa, estadoChispa } from "@/components/chispa";
 import { Confeti } from "@/components/confeti";
+import { NotaHabito } from "@/components/nota-habito";
 import { InsigniaRacha } from "@/components/racha";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
@@ -224,12 +226,15 @@ function HabitosDeHoy({ onCelebrar }: { onCelebrar: (c: Celebracion) => void }) 
   const hoy = useHoy();
   const habitos = useHabitos();
   const { data: rachas } = useRachas();
+  const { data: notas } = useNotasDia(hoy);
   const marcar = useMarcarHabito();
 
   const dia = diaSemana(hoy);
   const deHoy = habitos.data?.filter((h) => h.activo && h.dias_semana.includes(dia)) ?? [];
 
   function alternar(habito: Habito, completado: boolean) {
+    // Desmarcar borra el registro: si tenía nota, avisar antes.
+    if (!completado && notas?.get(habito.id) && !confirm("Si lo desmarcas, también se borrará tu nota. ¿Seguro?")) return;
     marcar.mutate({ habitoId: habito.id, fecha: hoy, completado });
     if (!completado || !rachas) return;
 
@@ -284,6 +289,8 @@ function HabitosDeHoy({ onCelebrar }: { onCelebrar: (c: Celebracion) => void }) 
                 completado={rachas.completadosHoy.has(habito.id)}
                 racha={racha?.actual ?? 0}
                 salvada={racha?.salvadaEstaSemana ?? false}
+                nota={notas?.get(habito.id)}
+                fecha={hoy}
                 onAlternar={(completado) => alternar(habito, completado)}
               />
             );
@@ -299,12 +306,16 @@ function FilaHabito({
   completado,
   racha,
   salvada,
+  nota,
+  fecha,
   onAlternar,
 }: {
   habito: Habito;
   completado: boolean;
   racha: number;
   salvada: boolean;
+  nota: string | null | undefined;
+  fecha: string;
   onAlternar: (completado: boolean) => void;
 }) {
   // Cuenta de marcados en esta visita: cambia la key del confeti para relanzarlo.
@@ -361,6 +372,12 @@ function FilaHabito({
           {salvada ? " Un protector salvó esta racha esta semana." : ""}
         </span>
       </button>
+      {/* Nota opcional de "qué hiciste", solo cuando ya está cumplido */}
+      {completado && (
+        <div className="mt-1.5 animate-entrar pl-2 sm:pl-[76px]">
+          <NotaHabito habito={habito} fecha={fecha} nota={nota} />
+        </div>
+      )}
     </li>
   );
 }

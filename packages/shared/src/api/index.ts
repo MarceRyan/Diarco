@@ -98,7 +98,29 @@ export async function listarCompletados(cliente: ClienteDiarco, desde: Fecha, ha
   );
 }
 
-/** Marca o desmarca un hábito en una fecha. Desmarcar borra el registro. */
+const registroConNotaSchema = habitoRegistroSchema.pick({ habito_id: true, fecha: true, nota: true });
+
+/** Registros completados de un día, con su nota (opcional) de "qué hiciste". */
+export async function listarRegistrosDia(cliente: ClienteDiarco, fecha: Fecha) {
+  return validar(
+    await cliente.from("habito_registros").select("habito_id, fecha, nota").eq("fecha", fecha).eq("completado", true),
+    z.array(registroConNotaSchema),
+  );
+}
+
+/**
+ * Guarda (o borra, con null) la nota de un hábito cumplido en una fecha.
+ * Usa upsert: si el registro no existiera aún, lo crea como cumplido.
+ */
+export async function guardarNotaHabito(cliente: ClienteDiarco, habitoId: number, fecha: Fecha, nota: string | null) {
+  comprobar(
+    await cliente
+      .from("habito_registros")
+      .upsert({ habito_id: habitoId, fecha, completado: true, nota }, { onConflict: "habito_id,fecha" }),
+  );
+}
+
+/** Marca o desmarca un hábito en una fecha. Desmarcar borra el registro (y su nota). */
 export async function marcarHabito(
   cliente: ClienteDiarco,
   habitoId: number,

@@ -140,9 +140,14 @@ export function useMarcarHabito() {
     mutationFn: ({ habitoId, fecha, completado }: { habitoId: number; fecha: Fecha; completado: boolean }) =>
       api.marcarHabito(cliente(), habitoId, fecha, completado),
     onMutate: async ({ habitoId, fecha, completado }) => {
-      await qc.cancelQueries({ queryKey: claves.completados });
-      const anteriores = qc.getQueriesData<Completado[]>({ queryKey: claves.completados });
-      qc.setQueriesData<Completado[]>({ queryKey: claves.completados }, (lista = []) => {
+      // Las listas por día (notas) solo se tocan si son de la fecha marcada.
+      const filtro = {
+        queryKey: claves.completados,
+        predicate: (q: { queryKey: readonly unknown[] }) => q.queryKey[1] !== "dia" || q.queryKey[2] === fecha,
+      };
+      await qc.cancelQueries(filtro);
+      const anteriores = qc.getQueriesData<Completado[]>(filtro);
+      qc.setQueriesData<Completado[]>(filtro, (lista = []) => {
         const sin = lista.filter((r) => !(r.habito_id === habitoId && r.fecha === fecha));
         return completado ? [...sin, { habito_id: habitoId, fecha }] : sin;
       });
@@ -156,6 +161,42 @@ export function useMarcarHabito() {
         qc.invalidateQueries({ queryKey: claves.completados }),
         qc.invalidateQueries({ queryKey: claves.resumen }),
       ]),
+  });
+}
+
+/** Notas de los hábitos cumplidos en una fecha, por id de hábito. */
+export function useNotasDia(fecha: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.registrosDia(fecha),
+    queryFn: () => api.listarRegistrosDia(cliente(), fecha),
+    select: (registros) => new Map(registros.map((r) => [r.habito_id, r.nota])),
+  });
+}
+
+type RegistroConNota = { habito_id: number; fecha: Fecha; nota: string | null };
+
+/** Guarda la nota de un hábito cumplido; la interfaz la muestra al instante. */
+export function useGuardarNota() {
+  const cliente = useObtenerCliente();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ habitoId, fecha, nota }: { habitoId: number; fecha: Fecha; nota: string | null }) =>
+      api.guardarNotaHabito(cliente(), habitoId, fecha, nota),
+    onMutate: async ({ habitoId, fecha, nota }) => {
+      const clave = claves.registrosDia(fecha);
+      await qc.cancelQueries({ queryKey: clave });
+      const anterior = qc.getQueryData<RegistroConNota[]>(clave);
+      qc.setQueryData<RegistroConNota[]>(clave, (lista = []) => [
+        ...lista.filter((r) => r.habito_id !== habitoId),
+        { habito_id: habitoId, fecha, nota },
+      ]);
+      return { anterior, clave };
+    },
+    onError: (_e, _v, contexto) => {
+      if (contexto) qc.setQueryData(contexto.clave, contexto.anterior);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: claves.completados }),
   });
 }
 
