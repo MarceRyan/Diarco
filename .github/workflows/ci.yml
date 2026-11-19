@@ -1,0 +1,84 @@
+# Integración continua de Diarco.
+#  1. calidad: pruebas, tipos, lint, build y verificación de la base (sin Docker).
+#  2. e2e: Supabase local con Docker + seed (usuario demo) + Playwright completo,
+#     con capturas de todas las pantallas como artefacto descargable.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calidad:
+    name: Calidad
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # usa la versión de "packageManager" del package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm db:verificar
+
+  e2e:
+    name: De punta a punta
+    needs: calidad
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Levantar Supabase local (migraciones + seed con el usuario demo)
+        run: pnpm exec supabase start
+
+      - name: Variables de la web apuntando al Supabase local
+        run: |
+          pnpm exec supabase status -o json > estado.json
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r '.API_URL' estado.json)" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r '.PUBLISHABLE_KEY // .ANON_KEY' estado.json)" >> "$GITHUB_ENV"
+
+      - name: Compilar la web
+        run: pnpm --filter @diarco/web build
+
+      - name: Instalar Chromium para Playwright
+        run: pnpm --filter @diarco/web exec playwright install --with-deps chromium
+
+      - name: Pruebas de punta a punta
+        run: pnpm --filter @diarco/web e2e
+        env:
+          CI: "1"
+          E2E_EMAIL: demo@diarco.local
+          E2E_PASSWORD: diarco123
+          E2E_MUTAR: "1"
+
+      - name: Guardar capturas y reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-e2e
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report/
+          retention-days: 14
+
+      - name: Detener Supabase
+        if: always()
+        run: pnpm exec supabase stop --no-backup

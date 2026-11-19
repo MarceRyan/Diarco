@@ -87,6 +87,10 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 - `pnpm dev` — levantar web y móvil a la vez · `pnpm dev:web` / `pnpm dev:mobile` por separado
 - `pnpm test` — pruebas de `packages/shared` (Vitest)
 - `pnpm typecheck` / `pnpm lint` / `pnpm build` — verificaciones de todo el monorepo
+- `pnpm --filter @diarco/web e2e` — Playwright (usa Edge en local y el servidor de `pnpm dev:web`).
+  Con `E2E_EMAIL`/`E2E_PASSWORD` recorre las pantallas con sesión y guarda capturas; `E2E_MUTAR=1` solo en CI.
+- `pnpm --filter @diarco/shared generar:logros <migración.sql>` — regenera el catálogo de logros desde `CATALOGO_LOGROS`
+- CI (`.github/workflows/ci.yml`): calidad en cada push + e2e con Supabase local y el usuario demo
 - `pnpm db:start` / `pnpm db:reset` / `pnpm db:stop` — Supabase local (requiere Docker)
 - Dependencias de móvil: `pnpm --filter @diarco/mobile exec expo install <paquete>` (no `pnpm add`)
 
