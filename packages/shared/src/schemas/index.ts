@@ -145,6 +145,17 @@ export function horaAMinutos(hora: string): number {
   return Number(h) * 60 + Number(m);
 }
 
+/** Minutos desde medianoche a "HH:MM" (da la vuelta al día: 1440 → "00:00", -5 → "23:55"). */
+export function minutosAHora(minutos: number): string {
+  const total = ((Math.round(minutos) % 1440) + 1440) % 1440;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** Último minuto en que puede terminar un bloque (no cruza la medianoche). */
+export const ULTIMO_MINUTO_DEL_DIA = 23 * 60 + 59;
+
 export const bloqueHorarioSchema = z.object({
   id: idSchema,
   usuario_id: uuidSchema,

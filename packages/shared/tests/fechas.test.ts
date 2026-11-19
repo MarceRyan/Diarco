@@ -6,7 +6,10 @@ import {
   esZonaHorariaValida,
   fechaEnZona,
   fechaHoy,
+  horaActual,
+  horaAMinutos,
   inicioSemana,
+  minutosAHora,
   maximoDiasConsecutivos,
   rangoFechas,
   sumarDias,
@@ -80,6 +83,23 @@ describe("aritmética de fechas", () => {
   it("rangoFechas incluye ambos extremos", () => {
     expect(rangoFechas("2026-11-19", "2026-11-19")).toEqual(["2026-11-19"]);
     expect(rangoFechas("2026-11-20", "2026-11-19")).toEqual([]);
+  });
+});
+
+describe("horas", () => {
+  it("horaActual usa la zona del usuario en formato 24 h", () => {
+    const instante = new Date("2026-11-20T03:07:00Z");
+    expect(horaActual("America/Lima", instante)).toBe("22:07");
+    expect(horaActual("UTC", instante)).toBe("03:07");
+  });
+
+  it("minutosAHora y horaAMinutos son inversas y dan la vuelta al día", () => {
+    expect(minutosAHora(0)).toBe("00:00");
+    expect(minutosAHora(13 * 60 + 50)).toBe("13:50");
+    expect(minutosAHora(1440)).toBe("00:00");
+    expect(minutosAHora(-5)).toBe("23:55");
+    expect(horaAMinutos(minutosAHora(615))).toBe(615);
+    expect(horaAMinutos("08:30:00")).toBe(510);
   });
 });
 

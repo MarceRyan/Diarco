@@ -66,6 +66,16 @@ export function fechaHoy(zona: string = ZONA_HORARIA_POR_DEFECTO, ahora: Date = 
   return fechaEnZona(ahora, zona);
 }
 
+/** Hora actual "HH:MM" en la zona del usuario (para el atajo "Ahora"). */
+export function horaActual(zona: string = ZONA_HORARIA_POR_DEFECTO, ahora: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: zona,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(ahora);
+}
+
 /** Suma (o resta, con n negativo) días a una fecha. */
 export function sumarDias(fecha: Fecha, dias: number): Fecha {
   return aFecha(aMs(fecha) + dias * MS_POR_DIA);
