@@ -13,8 +13,8 @@ import {
   type Categoria,
 } from "@diarco/shared";
 import { useBloques, useCategorias, useHoy, useZonaHoraria } from "@diarco/shared/hooks";
-import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CalendarDays, CalendarRange, Plus } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { CargandoLista, claseTarjeta, Encabezado, MensajeError } from "@/components/ui/estados";
@@ -30,24 +30,68 @@ const PX_POR_HORA = 64;
 const ALTO_MINIMO = 48;
 
 type Edicion = { bloque?: BloqueHorario; dia: number; inicio?: string } | null;
+type Vista = "semana" | "dia";
+
+const CLAVE_VISTA = "diarco-horario-vista";
+
+// La última vista usada se recuerda en este navegador (preferencia personal).
+// Si el almacenamiento está bloqueado, se recuerda solo en memoria durante la visita.
+let vistaEnMemoria: Vista = "semana";
+const oyentesVista = new Set<() => void>();
+function leerVista(): Vista {
+  try {
+    return localStorage.getItem(CLAVE_VISTA) === "dia" ? "dia" : "semana";
+  } catch {
+    return vistaEnMemoria;
+  }
+}
+function guardarVista(vista: Vista) {
+  vistaEnMemoria = vista;
+  try {
+    localStorage.setItem(CLAVE_VISTA, vista);
+  } catch {
+    // Sin almacenamiento: vale solo para esta visita.
+  }
+  oyentesVista.forEach((avisar) => avisar());
+}
+function suscribirVista(avisar: () => void) {
+  oyentesVista.add(avisar);
+  return () => oyentesVista.delete(avisar);
+}
+
+/** Minutos que suman los bloques de una lista. */
+const minutosDe = (lista: BloqueHorario[]) => lista.reduce((t, b) => t + horaAMinutos(b.fin) - horaAMinutos(b.inicio), 0);
 
 export function PantallaHorario() {
   const hoy = useHoy();
   const bloques = useBloques();
   const { data: categorias = [] } = useCategorias();
+  // En el servidor siempre "semana"; en el navegador, la última vista usada.
+  const vista = useSyncExternalStore(suscribirVista, leerVista, () => "semana" as Vista);
+  const cambiarVista = guardarVista;
   const [dia, setDia] = useState<number>(() => diaSemana(hoy));
   const [edicion, setEdicion] = useState<Edicion>(null);
 
   const delDia = (d: number) => bloques.data?.filter((b) => b.dias_semana.includes(d)) ?? [];
   const categoriaDe = (b: BloqueHorario) => categorias.find((c) => c.id === b.categoria_id);
   const bloquesDia = delDia(dia);
-  const minutosDia = bloquesDia.reduce((t, b) => t + horaAMinutos(b.fin) - horaAMinutos(b.inicio), 0);
+  const minutosDia = minutosDe(bloquesDia);
+  // Total semanal: un bloque de lunes a viernes cuenta 5 veces.
+  const totalSemana = (bloques.data ?? []).reduce((t, b) => t + b.dias_semana.length, 0);
+  const minutosSemana = (bloques.data ?? []).reduce(
+    (t, b) => t + (horaAMinutos(b.fin) - horaAMinutos(b.inicio)) * b.dias_semana.length,
+    0,
+  );
 
   return (
     <>
       <Encabezado
         titulo="Tu semana"
-        subtitulo="Toca un día para ver su agenda; toca una hora libre para agregar algo."
+        subtitulo={
+          totalSemana === 0
+            ? "Toca cualquier hora para agregar tu primer bloque."
+            : `${totalSemana} ${totalSemana === 1 ? "bloque" : "bloques"} esta semana · ${duracion(minutosSemana)} organizadas`
+        }
         accion={
           <Boton onClick={() => setEdicion({ dia })}>
             <Plus className="size-5" strokeWidth={3} aria-hidden />
@@ -56,10 +100,44 @@ export function PantallaHorario() {
         }
       />
 
+      {/* Cambio de vista: semana completa o un día en detalle */}
+      <div role="group" aria-label="Vista del horario" className="mb-5 inline-flex gap-1 rounded-2xl border-2 border-borde bg-tarjeta p-1">
+        {(
+          [
+            { valor: "semana", etiqueta: "Semana", Icono: CalendarRange },
+            { valor: "dia", etiqueta: "Día", Icono: CalendarDays },
+          ] as const
+        ).map(({ valor, etiqueta, Icono }) => (
+          <button
+            key={valor}
+            type="button"
+            aria-pressed={vista === valor}
+            onClick={() => cambiarVista(valor)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl px-4 font-extrabold text-texto-suave transition-colors aria-pressed:bg-cielo aria-pressed:text-white"
+          >
+            <Icono className="size-5" strokeWidth={2.5} aria-hidden />
+            {etiqueta}
+          </button>
+        ))}
+      </div>
+
       {bloques.isPending ? (
         <CargandoLista filas={4} alto="h-20" />
       ) : bloques.error ? (
         <MensajeError error={bloques.error} onReintentar={() => bloques.refetch()} />
+      ) : vista === "semana" ? (
+        <VistaSemana
+          hoy={hoy}
+          delDia={delDia}
+          todos={bloques.data}
+          categoriaDe={categoriaDe}
+          onVerDia={(d) => {
+            setDia(d);
+            cambiarVista("dia");
+          }}
+          onEditar={(bloque, d) => setEdicion({ bloque, dia: d })}
+          onNuevo={(d, inicio) => setEdicion({ dia: d, inicio })}
+        />
       ) : (
         <div className="space-y-5">
           <SelectorSemana hoy={hoy} dia={dia} onElegir={setDia} delDia={delDia} categoriaDe={categoriaDe} />
@@ -279,5 +357,166 @@ export function LineaTiempo({
         </div>
       )}
     </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Vista semanal: los 7 días en columnas, las horas en filas
+// -----------------------------------------------------------------------------
+
+/** Alto de una hora en la vista semanal (más compacta que la del día). */
+const PX_SEMANA = 52;
+/** Alto mínimo de un bloque en la vista semanal. */
+const ALTO_MINIMO_SEMANA = 26;
+const COLUMNAS = "grid-cols-[3.5rem_repeat(7,minmax(5.5rem,1fr))]";
+
+export function VistaSemana({
+  hoy,
+  delDia,
+  todos,
+  categoriaDe,
+  onVerDia,
+  onEditar,
+  onNuevo,
+}: {
+  hoy: string;
+  delDia: (d: number) => BloqueHorario[];
+  todos: BloqueHorario[];
+  categoriaDe: (b: BloqueHorario) => Categoria | undefined;
+  onVerDia: (d: number) => void;
+  onEditar: (b: BloqueHorario, d: number) => void;
+  onNuevo: (d: number, inicio: string) => void;
+}) {
+  const ahora = useMinutoActual();
+  const [desde, hasta] = rangoHorasDia(todos);
+  const horas = Array.from({ length: hasta - desde }, (_, i) => desde + i);
+  const y = (minutos: number) => (minutos / 60 - desde) * PX_SEMANA;
+  const lunes = inicioSemana(hoy);
+  const fechas = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
+
+  // En pantallas angostas, al abrir se desliza hasta el día de hoy para que quede a la vista.
+  const desplazable = useRef<HTMLDivElement>(null);
+  const columnaHoy = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const contenedor = desplazable.current;
+    const hoyEl = columnaHoy.current;
+    if (!contenedor || !hoyEl || contenedor.scrollWidth <= contenedor.clientWidth) return;
+    const margenHoras = 56; // ancho de la columna de horas fija
+    const asomar = 28; // deja ver un poco del día anterior para que se note que se puede deslizar
+    const distancia = hoyEl.getBoundingClientRect().left - contenedor.getBoundingClientRect().left;
+    contenedor.scrollLeft = Math.max(0, contenedor.scrollLeft + distancia - margenHoras - asomar);
+  }, [hoy]);
+
+  return (
+    <section aria-label="Horario de la semana" className={`${claseTarjeta} overflow-hidden`}>
+      {/* En pantallas angostas la cuadrícula se desliza de lado; la columna de horas queda fija */}
+      <div ref={desplazable} className="overflow-x-auto">
+        <div className="min-w-[44rem]">
+          {/* Cabecera: cada día abre su vista en detalle */}
+          <div className={`grid ${COLUMNAS} border-b-2 border-borde`}>
+            <span className="sticky left-0 z-10 bg-tarjeta" aria-hidden />
+            {fechas.map((fecha) => {
+              const d = diaSemana(fecha);
+              const esHoy = fecha === hoy;
+              const cantidad = delDia(d).length;
+              return (
+                <button
+                  key={fecha}
+                  ref={esHoy ? columnaHoy : undefined}
+                  type="button"
+                  onClick={() => onVerDia(d)}
+                  aria-label={`Ver ${NOMBRES[d]} ${Number(fecha.slice(8))} en detalle: ${cantidad} ${cantidad === 1 ? "bloque" : "bloques"}`}
+                  className="group flex min-h-16 flex-col items-center justify-center gap-0.5 py-2 transition-colors hover:bg-superficie"
+                >
+                  <span className={`text-xs font-extrabold ${esHoy ? "text-cielo-texto" : "text-texto-suave"}`}>{CORTOS[d]}</span>
+                  <span
+                    className={`flex size-9 items-center justify-center rounded-full font-titulo text-xl leading-none font-bold ${
+                      esHoy ? "bg-cielo text-white" : "group-hover:bg-superficie-2"
+                    }`}
+                  >
+                    {Number(fecha.slice(8))}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Cuerpo */}
+          <div className={`grid ${COLUMNAS}`} style={{ height: (hasta - desde) * PX_SEMANA + 8 }}>
+            {/* Horas */}
+            <div className="sticky left-0 z-10 bg-tarjeta" aria-hidden>
+              <div className="relative h-full">
+                {horas.map((h) => (
+                  <span
+                    key={h}
+                    className="absolute right-2 text-[11px] font-extrabold text-texto-suave tabular-nums"
+                    style={{ top: y(h * 60) + 2 }}
+                  >
+                    {minutosAHora(h * 60)}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Un día por columna */}
+            {fechas.map((fecha) => {
+              const d = diaSemana(fecha);
+              const esHoy = fecha === hoy;
+              return (
+                <div key={fecha} className={`relative border-l-2 border-borde ${esHoy ? "bg-cielo-suave/40" : ""}`}>
+                  {horas.map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => onNuevo(d, minutosAHora(h * 60))}
+                      aria-label={`Agregar bloque el ${NOMBRES[d]} a las ${minutosAHora(h * 60)}`}
+                      className="absolute inset-x-0 border-t-2 border-borde/70 transition-colors hover:bg-cielo-suave"
+                      style={{ top: y(h * 60), height: PX_SEMANA }}
+                    />
+                  ))}
+
+                  {distribuirBloques(delDia(d)).map(({ bloque, inicio, fin, carril, carriles }) => {
+                    const categoria = categoriaDe(bloque);
+                    const color = categoria?.color ?? "#2f9ff0";
+                    const alto = Math.max(((fin - inicio) / 60) * PX_SEMANA, ALTO_MINIMO_SEMANA) - 2;
+                    return (
+                      <button
+                        key={bloque.id}
+                        type="button"
+                        onClick={() => onEditar(bloque, d)}
+                        aria-label={`${bloque.titulo}, ${NOMBRES[d]} de ${horaCorta(bloque.inicio)} a ${horaCorta(bloque.fin)}. Editar`}
+                        className="absolute flex flex-col justify-start overflow-hidden rounded-xl border-2 border-b-[3px] px-1.5 py-1 text-left transition-transform duration-100 hover:z-[1] hover:brightness-[1.03] active:translate-y-px"
+                        style={{
+                          top: y(inicio) + 1,
+                          height: alto,
+                          left: `calc(${(carril / carriles) * 100}% + 2px)`,
+                          width: `calc(${100 / carriles}% - 4px)`,
+                          backgroundColor: `color-mix(in oklab, ${color} 18%, var(--tarjeta))`,
+                          borderColor: `color-mix(in oklab, ${color} 50%, var(--tarjeta))`,
+                        }}
+                      >
+                        <span className="line-clamp-2 text-xs leading-tight font-extrabold">{bloque.titulo}</span>
+                        {alto >= 40 && (
+                          <span className="truncate text-[11px] font-bold text-texto-suave tabular-nums">
+                            {horaCorta(bloque.inicio)}–{horaCorta(bloque.fin)}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {esHoy && ahora !== null && ahora >= desde * 60 && ahora <= hasta * 60 && (
+                    <div className="pointer-events-none absolute inset-x-0 z-[2] flex items-center" style={{ top: y(ahora) - 4 }} aria-hidden>
+                      <span className="-ml-1 size-2 rounded-full bg-mandarina" />
+                      <span className="h-0.5 flex-1 bg-mandarina" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

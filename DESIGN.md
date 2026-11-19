@@ -67,7 +67,10 @@ Errores con "¡Uy!" y una salida clara ("Intentar de nuevo"). Nunca regañar por
 
 ## Horario y horas
 
-- Horario: semana como 7 tarjetas de día (con puntitos de color de sus bloques) + el día elegido como línea de tiempo
+- Horario: dos vistas con selector [Semana | Día] (se recuerda la última en el navegador).
+  **Semana** (por defecto): cuadrícula de 7 columnas × horas (52 px por hora); en móvil se desliza de lado con la
+  columna de horas fija y abre centrada en hoy; tocar la cabecera de un día abre su vista Día.
+  **Día**: semana como 7 tarjetas de día (con puntitos de color de sus bloques) + el día elegido como línea de tiempo
   vertical (64 px por hora). Cada bloque mide lo que dura; si dos se pisan van lado a lado (`distribuirBloques`).
   Línea "Ahora" en mandarina (solo en el navegador). Tocar una hora libre crea un bloque a esa hora.
 - Nunca usar `<input type="time">`: `SelectorHora` (números grandes con ▲▼ y atajos) y `SelectorDuracion` (chips).
