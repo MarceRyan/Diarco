@@ -30,6 +30,8 @@ interface ResultadoRecorrido {
   maxima: number;
   /** Protectores gastados por semana (clave: lunes de la semana). */
   protectoresUsados: Map<Fecha, number>;
+  /** Último día que un protector salvó la racha vigente (null si se rompió después o nunca pasó). */
+  ultimoSalvado: Fecha | null;
 }
 
 /**
@@ -45,6 +47,7 @@ function recorrerRacha(
 ): ResultadoRecorrido {
   let actual = 0;
   let maxima = 0;
+  let ultimoSalvado: Fecha | null = null;
   const protectoresUsados = new Map<Fecha, number>();
 
   for (const fecha of fechas) {
@@ -58,14 +61,16 @@ function recorrerRacha(
       const usados = protectoresUsados.get(semana) ?? 0;
       if (usados < protectoresPorSemana) {
         protectoresUsados.set(semana, usados + 1); // se salva la racha
+        ultimoSalvado = fecha;
       } else {
         actual = 0; // se rompe
+        ultimoSalvado = null;
       }
     }
     // "pendiente" y "no_aplica" no cambian nada.
   }
 
-  return { actual, maxima, protectoresUsados };
+  return { actual, maxima, protectoresUsados, ultimoSalvado };
 }
 
 // -----------------------------------------------------------------------------
@@ -98,6 +103,8 @@ export interface RachaHabito {
   protectoresUsadosSemana: number;
   /** Protectores que quedan en la semana actual. */
   protectoresRestantesSemana: number;
+  /** Esta semana un protector perdonó un fallo y la racha sigue viva gracias a él. */
+  salvadaEstaSemana: boolean;
 }
 
 /** Calcula la racha actual y máxima de un hábito. */
@@ -110,7 +117,7 @@ export function calcularRachaHabito(entrada: EntradaRachaHabito): RachaHabito {
   const esProgramado = (fecha: Fecha) => programados.has(diaSemana(fecha));
 
   const fechas = compararFechas(desde, hoy) <= 0 ? rangoFechas(desde, hoy) : [];
-  const { actual, maxima, protectoresUsados } = recorrerRacha(
+  const { actual, maxima, protectoresUsados, ultimoSalvado } = recorrerRacha(
     fechas,
     (fecha) => {
       if (!esProgramado(fecha)) return "no_aplica";
@@ -119,10 +126,11 @@ export function calcularRachaHabito(entrada: EntradaRachaHabito): RachaHabito {
     },
     protectores,
   );
+  const semanaHoy = inicioSemana(hoy);
 
   const programadoHoy = fechas.length > 0 && esProgramado(hoy);
   const completadoHoy = programadoHoy && completados.has(hoy);
-  const usadosSemana = protectoresUsados.get(inicioSemana(hoy)) ?? 0;
+  const usadosSemana = protectoresUsados.get(semanaHoy) ?? 0;
 
   return {
     actual,
@@ -132,7 +140,16 @@ export function calcularRachaHabito(entrada: EntradaRachaHabito): RachaHabito {
     enRiesgo: programadoHoy && !completadoHoy && actual > 0,
     protectoresUsadosSemana: usadosSemana,
     protectoresRestantesSemana: Math.max(0, protectores - usadosSemana),
+    salvadaEstaSemana: actual > 0 && ultimoSalvado !== null && inicioSemana(ultimoSalvado) === semanaHoy,
   };
+}
+
+/**
+ * Racha que tendrá el hábito si se marca hoy como cumplido: suma 1 solo si hoy
+ * está programado y aún pendiente. Sirve para detectar hitos al marcar.
+ */
+export function rachaTrasCumplirHoy(racha: Pick<RachaHabito, "actual" | "programadoHoy" | "completadoHoy">): number {
+  return racha.programadoHoy && !racha.completadoHoy ? racha.actual + 1 : racha.actual;
 }
 
 // -----------------------------------------------------------------------------

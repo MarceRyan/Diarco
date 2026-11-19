@@ -5,6 +5,7 @@ import {
   construirResumenDiario,
   cumpleUmbral,
   hitoAlcanzado,
+  rachaTrasCumplirHoy,
   rangoFechas,
   siguienteHito,
   type DiaResumen,
@@ -178,6 +179,47 @@ describe("calcularRachaHabito", () => {
       hoy: HOY,
     });
     expect(r.actual).toBe(3);
+  });
+});
+
+describe("protector visible y hitos", () => {
+  it("salvadaEstaSemana: el protector de esta semana mantiene viva la racha", () => {
+    const r = calcularRachaHabito({
+      diasSemana: TODOS,
+      desde: "2026-11-01",
+      completados: dias("2026-11-10", HOY, ["2026-11-17"]), // falla el martes 17
+      hoy: HOY,
+      protectoresPorSemana: 1,
+    });
+    expect(r.salvadaEstaSemana).toBe(true);
+  });
+
+  it("no cuenta si el protector se usó la semana pasada", () => {
+    const r = calcularRachaHabito({
+      diasSemana: TODOS,
+      desde: "2026-11-01",
+      completados: dias("2026-11-05", HOY, ["2026-11-11"]), // falla el miércoles 11
+      hoy: HOY,
+      protectoresPorSemana: 1,
+    });
+    expect(r.salvadaEstaSemana).toBe(false);
+  });
+
+  it("no cuenta si después del protector la racha se rompió", () => {
+    const r = calcularRachaHabito({
+      diasSemana: TODOS,
+      desde: "2026-11-01",
+      completados: dias("2026-11-10", HOY, ["2026-11-16", "2026-11-17"]),
+      hoy: HOY,
+      protectoresPorSemana: 1,
+    });
+    expect(r.salvadaEstaSemana).toBe(false);
+  });
+
+  it("rachaTrasCumplirHoy suma 1 solo si hoy está pendiente", () => {
+    expect(rachaTrasCumplirHoy({ actual: 6, programadoHoy: true, completadoHoy: false })).toBe(7);
+    expect(rachaTrasCumplirHoy({ actual: 7, programadoHoy: true, completadoHoy: true })).toBe(7);
+    expect(rachaTrasCumplirHoy({ actual: 6, programadoHoy: false, completadoHoy: false })).toBe(6);
   });
 });
 

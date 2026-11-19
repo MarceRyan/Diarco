@@ -60,6 +60,11 @@ export async function crearHabito(cliente: ClienteDiarco, habito: HabitoNuevo) {
   return validar(await cliente.from("habitos").insert(habito).select("*").single(), habitoSchema);
 }
 
+/** Crea varios hábitos en una sola petición (todos o ninguno). */
+export async function crearHabitos(cliente: ClienteDiarco, habitos: HabitoNuevo[]) {
+  return validar(await cliente.from("habitos").insert(habitos).select("*"), z.array(habitoSchema));
+}
+
 export async function actualizarHabito(cliente: ClienteDiarco, id: number, cambios: HabitoActualizar) {
   return validar(
     await cliente.from("habitos").update(cambios).eq("id", id).select("*").single(),

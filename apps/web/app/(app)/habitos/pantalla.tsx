@@ -5,6 +5,8 @@ import { useHabitos, useRachas } from "@diarco/shared/hooks";
 import { Pencil, Plus, Trophy } from "lucide-react";
 import { useState } from "react";
 import { InsigniaRacha } from "@/components/racha";
+import { TiraDias } from "@/components/tira-dias";
+import { describirDias } from "@/lib/formato";
 import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { CargandoLista, claseTarjeta, Encabezado, EstadoVacio, MensajeError } from "@/components/ui/estados";
@@ -122,15 +124,20 @@ function TarjetaHabito({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-titulo text-xl font-bold">{habito.nombre}</p>
-          <p className="truncate text-sm text-texto-suave">{habito.meta ?? (habito.activo ? "Sin meta definida" : "En pausa")}</p>
+          <p className="truncate text-sm text-texto-suave">
+            {habito.activo ? describirDias(habito.dias_semana) : "En pausa"}
+            {habito.meta ? ` · ${habito.meta}` : ""}
+          </p>
         </div>
         <Boton variante="fantasma" icono aria-label={`Editar ${habito.nombre}`} onClick={onEditar}>
           <Pencil className="size-5" strokeWidth={2.5} aria-hidden />
         </Boton>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        {/* Días programados: punto relleno con el color del hábito */}
+      {/* Activo: últimos 7 días, tocables para corregir olvidos. En pausa: solo los días programados. */}
+      {habito.activo ? (
+        <TiraDias habitoId={habito.id} nombre={habito.nombre} />
+      ) : (
         <ul className="flex gap-1" aria-label={`Días: ${SEMANA.filter((d) => dias.has(d.valor)).map((d) => d.nombre).join(", ")}`}>
           {SEMANA.map((d) => (
             <li
@@ -147,6 +154,9 @@ function TarjetaHabito({
             </li>
           ))}
         </ul>
+      )}
+
+      <div className="flex items-center justify-end gap-3">
         {habito.activo && racha !== undefined && (
           <div className="flex items-center gap-2">
             <InsigniaRacha dias={racha} />

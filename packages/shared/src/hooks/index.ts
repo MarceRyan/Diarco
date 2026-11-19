@@ -95,6 +95,11 @@ export function useCrearHabito() {
   return useMutacion((habito: HabitoNuevo) => api.crearHabito(cliente(), habito), afectadosPorHabitos);
 }
 
+export function useCrearHabitos() {
+  const cliente = useObtenerCliente();
+  return useMutacion((habitos: HabitoNuevo[]) => api.crearHabitos(cliente(), habitos), afectadosPorHabitos);
+}
+
 export function useActualizarHabito() {
   const cliente = useObtenerCliente();
   return useMutacion(
@@ -176,6 +181,8 @@ export interface Rachas {
   dias: DiaResumen[];
   /** Total de registros completados en la historia consultada. */
   totalCompletados: number;
+  /** Hábitos activos con su primer día y sus fechas cumplidas (para historial y correcciones). */
+  activos: { id: number; diasSemana: readonly number[]; desde: Fecha; completados: Set<Fecha> }[];
 }
 
 /**
@@ -238,6 +245,7 @@ export function useRachas() {
       completadosHoy,
       dias,
       totalCompletados: completados.data.length,
+      activos: activos.map((h) => ({ ...h, completados: new Set(fechasPorHabito.get(h.id) ?? []) })),
     };
   }, [habitos.data, completados.data, perfil.data, hoy, zona]);
 
