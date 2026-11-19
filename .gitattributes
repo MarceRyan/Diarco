@@ -1,0 +1,14 @@
+# Finales de línea LF en el repositorio (consistente entre Windows, Mac, Linux y Vercel).
+* text=auto eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

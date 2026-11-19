@@ -1,0 +1,27 @@
+{
+  "name": "huella",
+  "private": true,
+  "description": "Huella: bitácora diaria, horario semanal y hábitos con rachas (web + móvil).",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@huella/web",
+    "dev:mobile": "turbo run dev --filter=@huella/mobile",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:verificar": "node supabase/tests/verificar-sin-docker.mjs supabase"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "supabase": "^3.2.0",
+    "turbo": "^2.11.13"
+  }
+}
