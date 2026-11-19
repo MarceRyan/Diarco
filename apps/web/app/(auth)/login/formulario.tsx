@@ -48,7 +48,12 @@ export function FormularioLogin() {
       <h1 className="text-center font-titulo text-3xl font-extrabold">¡Qué bueno verte!</h1>
       {error && <MensajeError error={new Error(error)} />}
       <Campo etiqueta="Correo" name="email" type="email" autoComplete="email" placeholder="tu@correo.com" required />
-      <Campo etiqueta="Contraseña" name="password" type="password" autoComplete="current-password" required />
+      <div>
+        <Campo etiqueta="Contraseña" name="password" type="password" autoComplete="current-password" required />
+        <Link href="/recuperar" className="mt-1 inline-flex min-h-11 items-center text-sm font-extrabold text-violeta-texto">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
       <Boton type="submit" grande cargando={cargando} className="w-full">
         Entrar
       </Boton>

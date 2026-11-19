@@ -12,9 +12,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, supabaseConfigurado } from "./entorno";
 
 /** Rutas accesibles sin sesión. */
-const RUTAS_PUBLICAS = ["/login", "/registro", "/auth"];
+const RUTAS_PUBLICAS = ["/login", "/registro", "/recuperar", "/auth"];
 /** Rutas que no tiene sentido ver con sesión iniciada. */
-const RUTAS_SOLO_INVITADOS = ["/login", "/registro"];
+const RUTAS_SOLO_INVITADOS = ["/login", "/registro", "/recuperar"];
 
 const empiezaCon = (ruta: string, prefijos: string[]) =>
   prefijos.some((p) => ruta === p || ruta.startsWith(`${p}/`));

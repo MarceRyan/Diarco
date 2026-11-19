@@ -8,6 +8,15 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 
+/**
+ * A dónde ir después de confirmar (?siguiente=/nueva-contrasena). Solo se aceptan
+ * rutas internas: evita que el enlace sirva para redirigir a otro sitio.
+ */
+function destinoSeguro(siguiente: string | null): string {
+  if (!siguiente || !siguiente.startsWith("/") || siguiente.startsWith("//") || siguiente.includes("\\")) return "/hoy";
+  return siguiente;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const codigo = searchParams.get("code");
@@ -26,7 +35,7 @@ export async function GET(request: NextRequest) {
     confirmado = !error;
   }
 
-  if (confirmado) return NextResponse.redirect(new URL("/hoy", request.url));
+  if (confirmado) return NextResponse.redirect(new URL(destinoSeguro(searchParams.get("siguiente")), request.url));
 
   const url = new URL("/login", request.url);
   url.searchParams.set("error", "enlace");
