@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CODIGOS_LOGRO, evaluarLogros, nuevosLogros, rangoFechas, type ContextoLogros } from "../src";
@@ -58,10 +58,13 @@ describe("nuevosLogros", () => {
 });
 
 describe("catálogo", () => {
-  it("los códigos coinciden con los logros del seed de Supabase", () => {
-    const seed = readFileSync(fileURLToPath(new URL("../../../supabase/seed.sql", import.meta.url)), "utf8");
-    const bloque = seed.slice(seed.indexOf("insert into public.logros"), seed.indexOf("on conflict (codigo)"));
-    const codigosSeed = [...bloque.matchAll(/\(\s*'([a-z0-9_]+)'/g)].map((m) => m[1]);
-    expect([...codigosSeed].sort()).toEqual([...CODIGOS_LOGRO].sort());
+  it("los códigos coinciden con la migración del catálogo de logros", () => {
+    const dir = fileURLToPath(new URL("../../../supabase/migrations/", import.meta.url));
+    const archivo = readdirSync(dir).find((f) => f.endsWith("_catalogo_logros.sql"));
+    expect(archivo, "falta la migración *_catalogo_logros.sql").toBeDefined();
+    const sql = readFileSync(`${dir}${archivo}`, "utf8");
+    const bloque = sql.slice(sql.indexOf("insert into public.logros"), sql.indexOf("on conflict (codigo)"));
+    const codigosSql = [...bloque.matchAll(/\(\s*'([a-z0-9_]+)'/g)].map((m) => m[1]);
+    expect([...codigosSql].sort()).toEqual([...CODIGOS_LOGRO].sort());
   });
 });

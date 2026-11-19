@@ -8,20 +8,8 @@
 -- activas sin importar cuándo se ejecute el seed.
 -- =============================================================================
 
--- -----------------------------------------------------------------------------
--- Catálogo de logros (global)
--- -----------------------------------------------------------------------------
-insert into public.logros (codigo, nombre, descripcion) values
-  ('primer_paso',       'Primer paso',        'Completa un hábito por primera vez.'),
-  ('racha_3',           'Calentando motores', 'Alcanza una racha de 3 días.'),
-  ('racha_7',           'Una semana entera',  'Alcanza una racha de 7 días.'),
-  ('racha_21',          'Hábito formado',     'Alcanza una racha de 21 días.'),
-  ('racha_30',          'Un mes imparable',   'Alcanza una racha de 30 días.'),
-  ('racha_100',         'Leyenda',            'Alcanza una racha de 100 días.'),
-  ('semana_perfecta',   'Semana perfecta',    'Cumple el 100 % de tus hábitos programados durante 7 días seguidos.'),
-  ('bitacora_constante','Bitácora constante', 'Registra actividades 7 días seguidos.'),
-  ('buen_animo',        'Buen ánimo',         'Registra tu estado de ánimo 14 días seguidos.')
-on conflict (codigo) do nothing;
+-- El catálogo de logros está en la migración catalogo_logros (se necesita en
+-- todos los entornos, no solo en desarrollo).
 
 -- -----------------------------------------------------------------------------
 -- Usuario demo (el trigger al_crear_usuario crea su perfil automáticamente)
