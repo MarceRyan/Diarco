@@ -1,2 +1,4 @@
-// Lógica de rachas, estadísticas y logros (rachas.ts, estadisticas.ts, logros.ts). Se completa en la etapa 2.
-export {};
+export * from "./fechas";
+export * from "./rachas";
+export * from "./estadisticas";
+export * from "./logros";

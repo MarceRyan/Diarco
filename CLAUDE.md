@@ -54,6 +54,12 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 - Racha general: días seguidos con al menos 70 % de los hábitos programados cumplidos.
 - Fechas siempre en la zona horaria del usuario (por defecto America/Lima), nunca en UTC del servidor.
 - Avisos de racha al llegar a 3, 7, 21, 30 y 100.
+- Detalles implementados en `packages/shared/src/logic/rachas.ts`:
+  - La historia se recorre en orden cronológico: la racha de hoy = la de ayer + hoy (nunca cambia hacia atrás).
+  - Semanas de lunes a domingo para el protector. Un día protegido mantiene la racha pero no suma.
+  - Si la racha está en 0 no se gasta protector. La racha general no usa protector.
+  - Días sin hábitos programados se saltan en la racha general.
+- Fechas como texto `AAAA-MM-DD` (tipo `Fecha`), operadas en UTC puro; nunca usar `new Date("AAAA-MM-DD")` local.
 
 ## Diseño
 - Colores: mandarina #ff6a2b (rachas), violeta #6741d9 (progreso), fondo blanco; modo oscuro obligatorio.
