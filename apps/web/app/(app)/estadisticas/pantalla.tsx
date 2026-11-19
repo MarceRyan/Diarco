@@ -25,6 +25,7 @@ import { ChartColumn, Clock, Flame, Smile, Target } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { DescubrimientosAnimo } from "@/components/descubrimientos";
+import { CosechaSemanal, TuChispa } from "@/components/progreso-chispa";
 import { BarrasHorizontales, GraficoArea, GraficoColumnas, MapaCalor, TarjetaGrafico } from "@/components/graficos";
 import { claseBoton } from "@/components/ui/boton";
 import { CargandoLista, claseTarjeta, Encabezado, Esqueleto, EstadoVacio, MensajeError } from "@/components/ui/estados";
@@ -62,6 +63,10 @@ export function PantallaEstadisticas() {
         />
       ) : (
         <div className="space-y-6">
+          {/* Chispa crece con toda tu historia; no depende del periodo elegido */}
+          <TuChispa />
+          <CosechaSemanal />
+
           {/* Filtro de periodo: una fila sobre los gráficos */}
           <div role="group" aria-label="Periodo" className="inline-flex gap-1 rounded-2xl border-2 border-borde bg-tarjeta p-1">
             {PERIODOS.map((p) => (

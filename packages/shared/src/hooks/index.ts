@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { evaluarLogros, type CodigoLogro, type ContextoLogros } from "../logic/logros";
+import { cosechasSemanales, diasSinLena, estacionDelAno, etapaChispa, lenaTotal } from "../logic/chispa";
 import * as api from "../api";
 import { ZONA_HORARIA_POR_DEFECTO } from "../constantes";
 import { fechaEnZona, fechaHoy, sumarDias } from "../logic/fechas";
@@ -537,4 +538,52 @@ export function useVigilanteLogros(onNuevos: (logros: { codigo: CodigoLogro; nom
         nuevos.forEach((l) => enviados.current.delete(l.codigo));
       });
   }, [contexto, logros.data, cliente, qc]);
+}
+
+// -----------------------------------------------------------------------------
+// Chispa que crece (leña, etapa, estación y cosecha semanal)
+// -----------------------------------------------------------------------------
+
+/** Semanas que muestra el álbum de cosechas. */
+export const SEMANAS_COSECHA = 8;
+
+/** Todo lo necesario para dibujar a Chispa en su etapa y el álbum de cosechas. */
+export function useEvolucionChispa() {
+  const hoy = useHoy();
+  const zona = useZonaHoraria();
+  const totales = useTotalesLogros();
+  const { data: rachas } = useRachas();
+  const desde = sumarDias(hoy, -(DIAS_REVISION_LOGROS - 1));
+  const actividades = useActividadesRango(desde, hoy);
+  const animo = useAnimoRango(desde, hoy);
+
+  const data = useMemo(() => {
+    if (!totales.data || !rachas || !actividades.data || !animo.data) return undefined;
+    const lena = lenaTotal(totales.data);
+    const fechasAnimo = animo.data.map((a) => a.fecha);
+    const fechasConLena = [
+      ...rachas.activos.flatMap((h) => [...h.completados]),
+      ...fechasAnimo,
+      ...actividades.data.map((a) => a.fecha),
+    ];
+    return {
+      lena,
+      etapa: etapaChispa(lena),
+      diasSinLena: diasSinLena(fechasConLena, hoy),
+      estacion: estacionDelAno(hoy, zona),
+      cosechas: cosechasSemanales({
+        dias: rachas.dias,
+        fechasAnimo,
+        actividades: actividades.data,
+        hoy,
+        semanas: SEMANAS_COSECHA,
+      }),
+    };
+  }, [totales.data, rachas, actividades.data, animo.data, hoy, zona]);
+
+  return {
+    data,
+    error: totales.error ?? actividades.error ?? animo.error,
+    refetch: () => Promise.all([totales.refetch(), actividades.refetch(), animo.refetch()]),
+  };
 }
