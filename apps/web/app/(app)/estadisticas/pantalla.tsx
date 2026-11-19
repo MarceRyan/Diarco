@@ -76,7 +76,6 @@ export function PantallaEstadisticas() {
             ))}
           </div>
           <Contenido dias={periodo} />
-          <MapaAnual />
         </div>
       )}
     </>
@@ -117,55 +116,57 @@ function Contenido({ dias }: { dias: number }) {
 
   return (
     <>
-      {/* Resumen del periodo en frases: lo que importa, dicho como lo diría un amigo */}
-      <section aria-label="Resumen del periodo" className={`${claseTarjeta} divide-y-2 divide-borde`}>
-        <Frase icono={<Target className="size-5" strokeWidth={2.5} />} color="bg-violeta text-white">
-          {tasa === null ? (
-            "No tuviste hábitos programados en este periodo."
-          ) : (
-            <>
-              Cumpliste el <strong className="text-violeta-texto">{porcentaje(tasa)}</strong> de tus hábitos programados.
-            </>
-          )}
-        </Frase>
-        <Frase icono={<Flame className="size-5" strokeWidth={2.5} />} color="bg-mandarina text-white">
-          Tu racha va en{" "}
-          <strong className="text-mandarina-texto">
-            {rachas.general.actual} {rachas.general.actual === 1 ? "día" : "días"}
-          </strong>
-          ; tu mejor marca es de {rachas.general.maxima}.
-        </Frase>
-        <Frase icono={<Clock className="size-5" strokeWidth={2.5} />} color="bg-cielo text-white">
-          {minutos > 0 ? (
-            <>
-              Registraste <strong className="text-cielo-texto">{duracion(minutos)}</strong> en tu bitácora.
-            </>
-          ) : (
-            "Aún no registras tiempo en la bitácora en este periodo."
-          )}
-        </Frase>
-        <Frase icono={<Smile className="size-5" strokeWidth={2.5} />} color="bg-amarillo text-[#2a2342]">
-          {animoMedio === null ? (
-            "Cuéntanos cómo te sientes en Hoy para ver tu ánimo aquí."
-          ) : (
-            <>
-              Tu ánimo promedio fue <strong className="text-amarillo-texto">{animoMedio} de 5</strong> ({animo.data.length}{" "}
-              {animo.data.length === 1 ? "día" : "días"}).
-            </>
-          )}
-        </Frase>
-      </section>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
+        {/* Resumen del periodo en frases: lo que importa, dicho como lo diría un amigo */}
+        <section aria-label="Resumen del periodo" className={`${claseTarjeta} divide-y-2 divide-borde`}>
+          <Frase icono={<Target className="size-5" strokeWidth={2.5} />} color="bg-violeta text-white">
+            {tasa === null ? (
+              "No tuviste hábitos programados en este periodo."
+            ) : (
+              <>
+                Cumpliste el <strong className="text-violeta-texto">{porcentaje(tasa)}</strong> de tus hábitos programados.
+              </>
+            )}
+          </Frase>
+          <Frase icono={<Flame className="size-5" strokeWidth={2.5} />} color="bg-mandarina text-white">
+            Tu racha va en{" "}
+            <strong className="text-mandarina-texto">
+              {rachas.general.actual} {rachas.general.actual === 1 ? "día" : "días"}
+            </strong>
+            ; tu mejor marca es de {rachas.general.maxima}.
+          </Frase>
+          <Frase icono={<Clock className="size-5" strokeWidth={2.5} />} color="bg-cielo text-white">
+            {minutos > 0 ? (
+              <>
+                Registraste <strong className="text-cielo-texto">{duracion(minutos)}</strong> en tu bitácora.
+              </>
+            ) : (
+              "Aún no registras tiempo en la bitácora en este periodo."
+            )}
+          </Frase>
+          <Frase icono={<Smile className="size-5" strokeWidth={2.5} />} color="bg-amarillo text-[#2a2342]">
+            {animoMedio === null ? (
+              "Cuéntanos cómo te sientes en Hoy para ver tu ánimo aquí."
+            ) : (
+              <>
+                Tu ánimo promedio fue <strong className="text-amarillo-texto">{animoMedio} de 5</strong> ({animo.data.length}{" "}
+                {animo.data.length === 1 ? "día" : "días"}).
+              </>
+            )}
+          </Frase>
+        </section>
 
-      <TarjetaGrafico
-        titulo="Cumplimiento diario"
-        descripcion="Porcentaje de hábitos programados que cumpliste cada día."
-        tabla={resumen.data.map((d) => [fechaCorta(d.fecha), d.porcentaje === null ? "Sin hábitos" : porcentaje(d.porcentaje)])}
-      >
-        <GraficoArea
-          datos={resumen.data.map((d) => ({ fecha: d.fecha, valor: d.porcentaje === null ? null : Math.round(d.porcentaje * 100) }))}
-          formato={(v) => `${v} %`}
-        />
-      </TarjetaGrafico>
+        <TarjetaGrafico
+          titulo="Cumplimiento diario"
+          descripcion="Porcentaje de hábitos programados que cumpliste cada día."
+          tabla={resumen.data.map((d) => [fechaCorta(d.fecha), d.porcentaje === null ? "Sin hábitos" : porcentaje(d.porcentaje)])}
+        >
+          <GraficoArea
+            datos={resumen.data.map((d) => ({ fecha: d.fecha, valor: d.porcentaje === null ? null : Math.round(d.porcentaje * 100) }))}
+            formato={(v) => `${v} %`}
+          />
+        </TarjetaGrafico>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <TarjetaGrafico
@@ -210,35 +211,38 @@ function Contenido({ dias }: { dias: number }) {
         </TarjetaGrafico>
       </div>
 
-      <TarjetaGrafico
-        titulo="Tiempo por categoría"
-        descripcion="Minutos registrados en la bitácora."
-        tabla={porCategoria.map((c) => [nombreCategoria(c.categoria_id)?.nombre ?? "Sin categoría", duracion(c.minutos)])}
-      >
-        {porCategoria.length === 0 ? (
-          <SinDatos>
-            Registra actividades con minutos en la <Link href="/bitacora" className="font-medium text-violeta-texto underline">Bitácora</Link> para ver en qué se va tu tiempo.
-          </SinDatos>
-        ) : (
-          <BarrasHorizontales
-            max={porCategoria[0]!.minutos}
-            filas={porCategoria.map((c) => {
-              const categoria = nombreCategoria(c.categoria_id);
-              return {
-                id: c.categoria_id ?? "sin",
-                etiqueta: (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="size-2.5 rounded-full" style={{ backgroundColor: categoria?.color ?? "#868e96" }} aria-hidden />
-                    {categoria?.nombre ?? "Sin categoría"}
-                  </span>
-                ),
-                valor: c.minutos,
-                texto: duracion(c.minutos),
-              };
-            })}
-          />
-        )}
-      </TarjetaGrafico>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <TarjetaGrafico
+          titulo="Tiempo por categoría"
+          descripcion="Minutos registrados en la bitácora."
+          tabla={porCategoria.map((c) => [nombreCategoria(c.categoria_id)?.nombre ?? "Sin categoría", duracion(c.minutos)])}
+        >
+          {porCategoria.length === 0 ? (
+            <SinDatos>
+              Registra actividades con minutos en la <Link href="/bitacora" className="font-medium text-violeta-texto underline">Bitácora</Link> para ver en qué se va tu tiempo.
+            </SinDatos>
+          ) : (
+            <BarrasHorizontales
+              max={porCategoria[0]!.minutos}
+              filas={porCategoria.map((c) => {
+                const categoria = nombreCategoria(c.categoria_id);
+                return {
+                  id: c.categoria_id ?? "sin",
+                  etiqueta: (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="size-2.5 rounded-full" style={{ backgroundColor: categoria?.color ?? "#868e96" }} aria-hidden />
+                      {categoria?.nombre ?? "Sin categoría"}
+                    </span>
+                  ),
+                  valor: c.minutos,
+                  texto: duracion(c.minutos),
+                };
+              })}
+            />
+          )}
+        </TarjetaGrafico>
+        <MapaAnual />
+      </div>
     </>
   );
 }

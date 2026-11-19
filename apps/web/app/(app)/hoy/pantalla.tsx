@@ -54,7 +54,9 @@ export function PantallaHoy() {
     return (
       <>
         <Encabezado titulo={nombre ? `¡Hola, ${nombre}!` : "¡Hola!"} subtitulo={fechaLarga(hoy)} />
-        <Bienvenida nombre={nombre} />
+        <div className="max-w-5xl">
+          <Bienvenida nombre={nombre} />
+        </div>
       </>
     );
   }
@@ -62,12 +64,17 @@ export function PantallaHoy() {
   return (
     <>
       <Encabezado titulo={nombre ? `¡Hola, ${nombre}!` : "¡Hola!"} subtitulo={fechaLarga(hoy)} />
-      <div className="space-y-8">
-        <TarjetaRacha />
-        <AvisoAyer />
-        <HabitosDeHoy onCelebrar={setCelebracion} />
-        <SelectorAnimo />
-        <AgendaDeHoy />
+      {/* Escritorio: lo principal (racha y hábitos) a la izquierda; ánimo y agenda a la derecha */}
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="min-w-0 space-y-8">
+          <TarjetaRacha />
+          <AvisoAyer />
+          <HabitosDeHoy onCelebrar={setCelebracion} />
+        </div>
+        <div className="min-w-0 space-y-8 xl:sticky xl:top-10">
+          <SelectorAnimo />
+          <AgendaDeHoy />
+        </div>
       </div>
       <PantallaCelebracion datos={celebracion} onCerrar={() => setCelebracion(null)} />
     </>

@@ -83,8 +83,17 @@ Errores con "¡Uy!" y una salida clara ("Intentar de nuevo"). Nunca regañar por
 
 ## Ancho de pantalla
 
-Pantallas de lectura y listas (Hoy, Hábitos, Bitácora, Logros, Ajustes): columna de `max-w-3xl`.
-Horario y Progreso: hasta `96rem` para aprovechar el escritorio (`ContenedorPrincipal`).
+Todas las secciones usan hasta `96rem` en escritorio (`ContenedorPrincipal`) y reparten su contenido en columnas;
+en el celular todo queda en una columna. Solo "Más" (menú del celular) se queda angosta.
+
+| Sección | Escritorio |
+|---|---|
+| Hoy | `xl`: racha + aviso + hábitos · ánimo + agenda (columna derecha fija de 26rem) |
+| Hábitos / Logros | tarjetas en 3 columnas desde `xl` |
+| Horario | cuadrícula semanal · panel "Esta semana" (20rem) |
+| Bitácora | `xl`: día + actividades · tiempo registrado + hábitos cumplidos (24rem) |
+| Progreso | `xl`: resumen + cumplimiento diario; por día + por hábito; tiempo por categoría + mapa de calor |
+| Ajustes | `lg`: perfil · apariencia + cuenta |
 
 ## Navegación
 

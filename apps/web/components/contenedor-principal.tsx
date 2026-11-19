@@ -3,19 +3,20 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-/** Pantallas que aprovechan todo el ancho en escritorio (cuadrículas y gráficos). */
-const RUTAS_ANCHAS = ["/horario", "/estadisticas"];
+/** Pantallas que se quedan en una columna angosta (menús pensados para el celular). */
+const RUTAS_ANGOSTAS = ["/mas"];
 
 /**
- * Ancho del área de contenido: las pantallas de lectura y listas usan una
- * columna cómoda; el horario y el progreso se extienden en pantallas grandes.
+ * Ancho del área de contenido. Todas las secciones aprovechan el escritorio
+ * (cada una reparte su contenido en columnas desde `lg`/`xl`); en el celular
+ * todo queda en una sola columna.
  */
 export function ContenedorPrincipal({ children }: { children: ReactNode }) {
   const ruta = usePathname();
-  const ancha = RUTAS_ANCHAS.some((r) => ruta === r || ruta.startsWith(`${r}/`));
+  const angosta = RUTAS_ANGOSTAS.some((r) => ruta === r || ruta.startsWith(`${r}/`));
   return (
     <main
-      className={`mx-auto w-full px-4 pt-6 pb-28 md:px-8 md:pt-10 md:pb-10 ${ancha ? "max-w-[96rem]" : "max-w-3xl"}`}
+      className={`mx-auto w-full px-4 pt-6 pb-28 md:px-8 md:pt-10 md:pb-10 ${angosta ? "max-w-3xl" : "max-w-[96rem]"}`}
     >
       {children}
     </main>

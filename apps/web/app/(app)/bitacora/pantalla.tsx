@@ -24,7 +24,7 @@ function HabitosDelDia({ fecha, hoy }: { fecha: string; hoy: string }) {
   if (cumplidos.length === 0) return null;
 
   return (
-    <section aria-labelledby="titulo-habitos-dia" className={`${claseTarjeta} mb-5 p-4`}>
+    <section aria-labelledby="titulo-habitos-dia" className={`${claseTarjeta} p-4`}>
       <h2 id="titulo-habitos-dia" className="mb-3 flex items-center gap-2 font-titulo text-xl font-bold">
         <span className="flex size-7 items-center justify-center rounded-full bg-verde text-white" aria-hidden>
           <Check className="size-4" strokeWidth={3.5} />
@@ -75,58 +75,95 @@ export function PantallaBitacora() {
     <>
       <Encabezado titulo="Tu bitácora" subtitulo="Lo que hiciste, día a día." accion={botonNuevo} />
 
-      {/* Navegación entre días */}
-      <div className="mb-6 flex items-center gap-2">
-        <Boton variante="secundario" icono aria-label="Día anterior" onClick={() => setFecha(sumarDias(fecha, -1))}>
-          <ChevronLeft className="size-6" strokeWidth={3} aria-hidden />
-        </Boton>
-        <label className="relative flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta px-3 font-extrabold">
-          <CalendarDays className="size-5 text-violeta-texto" strokeWidth={2.5} aria-hidden />
-          <span aria-hidden className="first-letter:uppercase">
-            {esHoy ? "Hoy" : esAyer ? "Ayer" : fechaLarga(fecha)}
-          </span>
-          <span className="sr-only">Elegir fecha</span>
-          <input
-            type="date"
-            value={fecha}
-            max={hoy}
-            onChange={(e) => esFechaValida(e.target.value) && setFecha(e.target.value)}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
-        </label>
-        <Boton
-          variante="secundario"
-          icono
-          aria-label="Día siguiente"
-          disabled={compararFechas(fecha, hoy) >= 0}
-          onClick={() => setFecha(sumarDias(fecha, 1))}
-        >
-          <ChevronRight className="size-6" strokeWidth={3} aria-hidden />
-        </Boton>
-      </div>
-      {!esHoy && (
-        <button type="button" onClick={() => setFecha(hoy)} className="-mt-3 mb-4 min-h-11 font-extrabold text-violeta-texto">
-          Volver a hoy
-        </button>
-      )}
+      {/* Escritorio: día y actividades a la izquierda; resumen y hábitos cumplidos a la derecha */}
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="min-w-0">
+          {/* Navegación entre días */}
+          <div className="mb-6 flex items-center gap-2">
+            <Boton variante="secundario" icono aria-label="Día anterior" onClick={() => setFecha(sumarDias(fecha, -1))}>
+              <ChevronLeft className="size-6" strokeWidth={3} aria-hidden />
+            </Boton>
+            <label className="relative flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta px-3 font-extrabold">
+              <CalendarDays className="size-5 text-violeta-texto" strokeWidth={2.5} aria-hidden />
+              <span aria-hidden className="first-letter:uppercase">
+                {esHoy ? "Hoy" : esAyer ? "Ayer" : fechaLarga(fecha)}
+              </span>
+              <span className="sr-only">Elegir fecha</span>
+              <input
+                type="date"
+                value={fecha}
+                max={hoy}
+                onChange={(e) => esFechaValida(e.target.value) && setFecha(e.target.value)}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </label>
+            <Boton
+              variante="secundario"
+              icono
+              aria-label="Día siguiente"
+              disabled={compararFechas(fecha, hoy) >= 0}
+              onClick={() => setFecha(sumarDias(fecha, 1))}
+            >
+              <ChevronRight className="size-6" strokeWidth={3} aria-hidden />
+            </Boton>
+          </div>
+          {!esHoy && (
+            <button type="button" onClick={() => setFecha(hoy)} className="-mt-3 mb-4 min-h-11 font-extrabold text-violeta-texto">
+              Volver a hoy
+            </button>
+          )}
 
-      <HabitosDelDia fecha={fecha} hoy={hoy} />
+          {actividades.isPending ? (
+            <CargandoLista filas={3} alto="h-20" />
+          ) : actividades.error ? (
+            <MensajeError error={actividades.error} onReintentar={() => actividades.refetch()} />
+          ) : actividades.data.length === 0 ? (
+            <EstadoVacio
+              icono={<NotebookPen className="size-7" strokeWidth={2.5} />}
+              titulo={esHoy ? "¿Qué hiciste hoy?" : "Este día quedó en blanco"}
+              descripcion="Anota lo que haces: trabajo, estudio, ejercicio o un buen momento. Con el tiempo verás en qué se te va el día."
+              accion={botonNuevo}
+            />
+          ) : (
+            <>
+              {/* Línea de tiempo del día */}
+              <ol className="relative space-y-3 pl-7">
+                <span className="absolute top-3 bottom-3 left-[9px] w-1 rounded-full bg-borde" aria-hidden />
+                {actividades.data.map((a) => {
+                  const categoria = categorias.find((c) => c.id === a.categoria_id);
+                  return (
+                    <li key={a.id} className="relative">
+                      <span
+                        className="absolute top-5 -left-7 size-5 rounded-full border-4 border-fondo"
+                        style={{ backgroundColor: categoria?.color ?? "var(--borde-fuerte)" }}
+                        aria-hidden
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEdicion({ actividad: a })}
+                        className={`${claseTarjeta} flex w-full flex-col gap-1.5 p-4 text-left transition-transform duration-100 hover:border-borde-fuerte active:translate-y-[2px] active:border-b-2`}
+                      >
+                        <span className="flex flex-wrap items-center gap-2 text-sm">
+                          <span className="font-extrabold text-texto-suave tabular-nums">{a.hora ? horaCorta(a.hora) : "Sin hora"}</span>
+                          {categoria && <ChipCategoria categoria={categoria} />}
+                          {a.minutos !== null && (
+                            <span className="rounded-full bg-violeta-suave px-2 py-0.5 font-extrabold text-violeta-texto">{duracion(a.minutos)}</span>
+                          )}
+                        </span>
+                        <span className="block text-lg font-bold break-words">{a.descripcion}</span>
+                        <span className="sr-only">Editar</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </>
+          )}
 
-      {actividades.isPending ? (
-        <CargandoLista filas={3} alto="h-20" />
-      ) : actividades.error ? (
-        <MensajeError error={actividades.error} onReintentar={() => actividades.refetch()} />
-      ) : actividades.data.length === 0 ? (
-        <EstadoVacio
-          icono={<NotebookPen className="size-7" strokeWidth={2.5} />}
-          titulo={esHoy ? "¿Qué hiciste hoy?" : "Este día quedó en blanco"}
-          descripcion="Anota lo que haces: trabajo, estudio, ejercicio o un buen momento. Con el tiempo verás en qué se te va el día."
-          accion={botonNuevo}
-        />
-      ) : (
-        <>
+        </div>
+        <aside aria-label="Tiempo y hábitos del día" className="min-w-0 space-y-5 xl:sticky xl:top-10">
           {totalMinutos > 0 && (
-            <section aria-label="Resumen del día" className="mb-5 rounded-[20px] border-2 border-b-4 border-violeta-labio bg-violeta p-4 text-sobre-violeta">
+            <section aria-label="Resumen del día" className="rounded-[20px] border-2 border-b-4 border-violeta-labio bg-violeta p-4 text-sobre-violeta">
               <p className="font-bold opacity-90">{esHoy ? "Hoy registraste" : "Ese día registraste"}</p>
               <p className="font-titulo text-4xl font-extrabold">{duracion(totalMinutos)}</p>
               <ul className="mt-3 flex flex-wrap gap-2">
@@ -143,39 +180,9 @@ export function PantallaBitacora() {
             </section>
           )}
 
-          {/* Línea de tiempo del día */}
-          <ol className="relative space-y-3 pl-7">
-            <span className="absolute top-3 bottom-3 left-[9px] w-1 rounded-full bg-borde" aria-hidden />
-            {actividades.data.map((a) => {
-              const categoria = categorias.find((c) => c.id === a.categoria_id);
-              return (
-                <li key={a.id} className="relative">
-                  <span
-                    className="absolute top-5 -left-7 size-5 rounded-full border-4 border-fondo"
-                    style={{ backgroundColor: categoria?.color ?? "var(--borde-fuerte)" }}
-                    aria-hidden
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setEdicion({ actividad: a })}
-                    className={`${claseTarjeta} flex w-full flex-col gap-1.5 p-4 text-left transition-transform duration-100 hover:border-borde-fuerte active:translate-y-[2px] active:border-b-2`}
-                  >
-                    <span className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="font-extrabold text-texto-suave tabular-nums">{a.hora ? horaCorta(a.hora) : "Sin hora"}</span>
-                      {categoria && <ChipCategoria categoria={categoria} />}
-                      {a.minutos !== null && (
-                        <span className="rounded-full bg-violeta-suave px-2 py-0.5 font-extrabold text-violeta-texto">{duracion(a.minutos)}</span>
-                      )}
-                    </span>
-                    <span className="block text-lg font-bold break-words">{a.descripcion}</span>
-                    <span className="sr-only">Editar</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </>
-      )}
+          <HabitosDelDia fecha={fecha} hoy={hoy} />
+        </aside>
+      </div>
 
       <Dialogo
         abierto={edicion !== null}

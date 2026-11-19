@@ -69,7 +69,7 @@ export function PantallaLogros() {
               <h2 id="titulo-obtenidos" className="mb-3 font-titulo text-2xl font-bold">
                 Ganadas
               </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {obtenidos.map((l) => (
                   <li key={l.id} className={`${claseTarjeta} flex items-center gap-4 p-4`}>
                     <Medalla ganada />
@@ -91,7 +91,7 @@ export function PantallaLogros() {
               <h2 id="titulo-pendientes" className="mb-3 font-titulo text-2xl font-bold">
                 Por ganar
               </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {pendientes.map((l) => {
                   const p = progreso(l.codigo);
                   const porcentaje = p ? Math.min(100, Math.round((p[0] / p[1]) * 100)) : null;

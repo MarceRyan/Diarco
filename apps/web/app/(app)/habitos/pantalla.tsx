@@ -56,7 +56,7 @@ export function PantallaHabitos() {
         />
       ) : (
         <div className="space-y-8">
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {activos.map((h) => (
               <TarjetaHabito
                 key={h.id}
@@ -73,7 +73,7 @@ export function PantallaHabitos() {
               <h2 id="titulo-pausados" className="mb-3 font-titulo text-xl font-bold text-texto-suave">
                 En pausa
               </h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {pausados.map((h) => (
                   <TarjetaHabito key={h.id} habito={h} onEditar={() => setEdicion({ modo: "editar", habito: h })} />
                 ))}

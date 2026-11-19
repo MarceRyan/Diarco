@@ -17,16 +17,21 @@ export function PantallaConfiguracion() {
   return (
     <>
       <Encabezado titulo="Ajustes" subtitulo="Haz que Diarco sea tuyo." />
-      <div className="space-y-6">
-        {perfil.isPending ? (
-          <CargandoLista filas={3} />
-        ) : perfil.error ? (
-          <MensajeError error={perfil.error} onReintentar={() => perfil.refetch()} />
-        ) : (
-          <FormularioPerfil key={perfil.data.id} perfil={perfil.data} />
-        )}
-        <Apariencia />
-        <Cuenta />
+      {/* Escritorio: perfil a la izquierda; apariencia y cuenta a la derecha */}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="min-w-0">
+          {perfil.isPending ? (
+            <CargandoLista filas={3} />
+          ) : perfil.error ? (
+            <MensajeError error={perfil.error} onReintentar={() => perfil.refetch()} />
+          ) : (
+            <FormularioPerfil key={perfil.data.id} perfil={perfil.data} />
+          )}
+        </div>
+        <div className="min-w-0 space-y-6">
+          <Apariencia />
+          <Cuenta />
+        </div>
       </div>
     </>
   );
