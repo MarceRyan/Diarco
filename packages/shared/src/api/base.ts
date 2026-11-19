@@ -30,6 +30,10 @@ export function traducirError(error: Pick<PostgrestError, "code" | "message">): 
     "22023": "El rango de fechas no es válido.",
     PGRST116: "No se encontró el elemento.",
     PGRST301: "Tu sesión expiró. Vuelve a iniciar sesión.",
+    // Columna o función nueva que aún no existe en la base: faltan migraciones.
+    PGRST204: "Tu base de datos necesita actualizarse (supabase db push).",
+    PGRST202: "Tu base de datos necesita actualizarse (supabase db push).",
+    "42703": "Tu base de datos necesita actualizarse (supabase db push).",
   };
   return new ErrorDiarco(mensajes[error.code] ?? "Algo salió mal. Inténtalo de nuevo.", error.code);
 }

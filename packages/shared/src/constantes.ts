@@ -25,6 +25,30 @@ export const SUGERENCIAS_HABITOS = [
 /** Máximo de sugerencias que se pueden elegir de una vez (empezar pequeño). */
 export const MAX_SUGERENCIAS = 3;
 
+/**
+ * Etiquetas de "qué influyó" en el ánimo del día. El `id` se guarda en la base
+ * (estados_animo.etiquetas); la migración etiquetas_animo replica esta lista.
+ */
+export const ETIQUETAS_ANIMO = [
+  { id: "dormi_bien", nombre: "Dormí bien", emoji: "😴" },
+  { id: "dormi_mal", nombre: "Dormí mal", emoji: "🥱" },
+  { id: "ejercicio", nombre: "Ejercicio", emoji: "🏃" },
+  { id: "trabajo", nombre: "Trabajo", emoji: "💼" },
+  { id: "estudio", nombre: "Estudio", emoji: "📚" },
+  { id: "familia", nombre: "Familia", emoji: "👨‍👩‍👧" },
+  { id: "amigos", nombre: "Amigos", emoji: "🫶" },
+  { id: "estres", nombre: "Estrés", emoji: "😣" },
+  { id: "salud", nombre: "Salud", emoji: "🤒" },
+  { id: "comida", nombre: "Comí bien", emoji: "🍎" },
+  { id: "descanso", nombre: "Descanso", emoji: "🛋️" },
+  { id: "logro", nombre: "Un logro", emoji: "🏆" },
+] as const;
+
+export type EtiquetaAnimo = (typeof ETIQUETAS_ANIMO)[number]["id"];
+
+/** Máximo de etiquetas por día (mantiene el registro rápido). */
+export const MAX_ETIQUETAS_ANIMO = 6;
+
 /** Colores de marca. */
 export const COLORES = {
   mandarina: "#ff6a2b",

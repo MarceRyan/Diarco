@@ -161,6 +161,12 @@ await debeFallar("bloque con fin <= inicio", DEMO,
 await debeFallar("registro duplicado del mismo día", DEMO,
   `insert into public.habito_registros (habito_id, fecha) values ($1, (select max(fecha) from public.habito_registros where habito_id = $1))`, [habitoDemo], /duplicate key/);
 await debeFallar("ánimo fuera de 1..5", DEMO, `insert into public.estados_animo (fecha, nivel) values (current_date + 100, 6)`, [], /check/);
+await debeFallar("etiqueta de ánimo desconocida", DEMO,
+  `insert into public.estados_animo (fecha, nivel, etiquetas) values (current_date + 200, 3, '{volar}')`, [], /check/);
+await comoUsuario(DEMO, async () => {
+  const r = await uno(`insert into public.estados_animo (fecha, nivel, etiquetas) values (current_date + 201, 4, '{ejercicio,familia}') returning etiquetas`);
+  JSON.stringify(r.etiquetas) === '["ejercicio","familia"]' ? ok("se guardan etiquetas de ánimo válidas") : mal(`etiquetas: ${JSON.stringify(r)}`);
+});
 await debeFallar("color con formato inválido", DEMO, `insert into public.categorias (nombre, color) values ('x', 'rojo')`, [], /check/);
 await comoUsuario(DEMO, async () => {
   const r = await uno("update public.perfiles set zona_horaria = 'Europe/Madrid', protectores_semana = 2 returning zona_horaria");

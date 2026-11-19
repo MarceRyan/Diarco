@@ -24,6 +24,7 @@ import {
 import { ChartColumn, Clock, Flame, Smile, Target } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { DescubrimientosAnimo } from "@/components/descubrimientos";
 import { BarrasHorizontales, GraficoArea, GraficoColumnas, MapaCalor, TarjetaGrafico } from "@/components/graficos";
 import { claseBoton } from "@/components/ui/boton";
 import { CargandoLista, claseTarjeta, Encabezado, Esqueleto, EstadoVacio, MensajeError } from "@/components/ui/estados";
@@ -210,6 +211,8 @@ function Contenido({ dias }: { dias: number }) {
           )}
         </TarjetaGrafico>
       </div>
+
+      <DescubrimientosAnimo />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <TarjetaGrafico

@@ -88,7 +88,7 @@ en el celular todo queda en una columna. Solo "Más" (menú del celular) se qued
 
 | Sección | Escritorio |
 |---|---|
-| Hoy | `xl`: racha + aviso + hábitos · ánimo + agenda (columna derecha fija de 26rem) |
+| Hoy | `xl`: racha + aviso + hábitos · columna de 26rem: tu semana (llamitas L–D), ánimo (qué influyó, 7 días, descubrimientos), modo enfoque, anotar rápido, agenda |
 | Hábitos / Logros | tarjetas en 3 columnas desde `xl` |
 | Horario | cuadrícula semanal · panel "Esta semana" (20rem) |
 | Bitácora | `xl`: día + actividades · tiempo registrado + hábitos cumplidos (24rem) |

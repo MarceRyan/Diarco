@@ -11,10 +11,8 @@ import {
   type Habito,
 } from "@diarco/shared";
 import {
-  useAnimo,
   useBloques,
   useCategorias,
-  useGuardarAnimo,
   useHabitos,
   useHoy,
   useMarcarHabito,
@@ -26,6 +24,10 @@ import { Check, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Bienvenida } from "@/components/bienvenida";
+import { Animo } from "@/components/hoy/animo";
+import { AnotarRapido } from "@/components/hoy/anotar-rapido";
+import { Enfoque } from "@/components/hoy/enfoque";
+import { SemanaRacha } from "@/components/hoy/semana-racha";
 import { ChipCategoria } from "@/components/categorias";
 import { Chispa, estadoChispa } from "@/components/chispa";
 import { Confeti } from "@/components/confeti";
@@ -71,8 +73,11 @@ export function PantallaHoy() {
           <AvisoAyer />
           <HabitosDeHoy onCelebrar={setCelebracion} />
         </div>
-        <div className="min-w-0 space-y-8 xl:sticky xl:top-10">
-          <SelectorAnimo />
+        <div className="min-w-0 space-y-6">
+          <SemanaRacha />
+          <Animo />
+          <Enfoque />
+          <AnotarRapido />
           <AgendaDeHoy />
         </div>
       </div>
@@ -101,7 +106,8 @@ function TarjetaRacha() {
   const proximo = siguienteHito(actual);
   const porcentaje = total > 0 ? Math.round((hechos / total) * 100) : 0;
 
-  const titulo = actual === 0 ? "¡Enciende tu racha hoy!" : `¡${actual} ${actual === 1 ? "día" : "días"} seguidos!`;
+  const titulo =
+    actual === 0 ? "¡Enciende tu racha hoy!" : actual === 1 ? "¡Primer día de racha!" : `¡${actual} días seguidos!`;
   const mensaje =
     total === 0
       ? "Hoy es día libre: tu racha está a salvo 😌"
@@ -448,55 +454,6 @@ function PantallaCelebracion({ datos, onCerrar }: { datos: Celebracion | null; o
         </div>
       )}
     </Dialogo>
-  );
-}
-
-// -----------------------------------------------------------------------------
-// Ánimo
-// -----------------------------------------------------------------------------
-const NIVELES = [
-  { nivel: 1, emoji: "😞", nombre: "Mal" },
-  { nivel: 2, emoji: "🙁", nombre: "Regular" },
-  { nivel: 3, emoji: "😐", nombre: "Normal" },
-  { nivel: 4, emoji: "🙂", nombre: "Bien" },
-  { nivel: 5, emoji: "😄", nombre: "¡Genial!" },
-];
-
-function SelectorAnimo() {
-  const hoy = useHoy();
-  const animo = useAnimo(hoy);
-  const guardar = useGuardarAnimo();
-  const actual = guardar.isPending ? guardar.variables?.nivel : animo.data?.nivel;
-
-  return (
-    <section aria-labelledby="titulo-animo">
-      <h2 id="titulo-animo" className="mb-3 font-titulo text-2xl font-bold">
-        ¿Cómo te sientes hoy?
-      </h2>
-      {guardar.error && (
-        <div className="mb-3">
-          <MensajeError error={guardar.error} />
-        </div>
-      )}
-      <div className="grid grid-cols-5 gap-2" role="group" aria-labelledby="titulo-animo">
-        {NIVELES.map(({ nivel, emoji, nombre }) => (
-          <button
-            key={nivel}
-            type="button"
-            aria-pressed={actual === nivel}
-            aria-label={nombre}
-            disabled={animo.isPending}
-            onClick={() => guardar.mutate({ fecha: hoy, nivel, nota: null })}
-            className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-[20px] border-2 border-b-4 border-borde bg-tarjeta transition-transform duration-100 active:translate-y-[2px] active:border-b-2 disabled:opacity-50 aria-pressed:border-violeta aria-pressed:bg-violeta-suave"
-          >
-            <span aria-hidden className={`text-3xl transition-transform ${actual === nivel ? "scale-125" : ""}`}>
-              {emoji}
-            </span>
-            <span className="text-xs font-extrabold text-texto-suave">{nombre}</span>
-          </button>
-        ))}
-      </div>
-    </section>
   );
 }
 

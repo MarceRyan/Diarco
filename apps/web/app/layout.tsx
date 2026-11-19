@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
+import Script from "next/script";
 import { SCRIPT_TEMA } from "@/lib/tema";
 import "./globals.css";
 
@@ -21,12 +22,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: SCRIPT_TEMA puede añadir data-tema antes de hidratar.
+    // suppressHydrationWarning: el script del tema añade data-tema antes de hidratar,
+    // y algunas extensiones del navegador agregan atributos al <body>.
     <html lang="es" className={`${baloo.variable} ${nunito.variable} h-full antialiased`} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
-      </head>
-      <body className="min-h-full bg-fondo font-sans font-medium text-texto">{children}</body>
+      <body className="min-h-full bg-fondo font-sans font-medium text-texto" suppressHydrationWarning>
+        {/* Aplica el tema guardado antes de pintar, para evitar un destello del tema equivocado. */}
+        <Script id="tema" strategy="beforeInteractive">
+          {SCRIPT_TEMA}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

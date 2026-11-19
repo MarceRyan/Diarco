@@ -8,6 +8,7 @@
  * Para editar se usa `.partial()` del esquema de creación.
  */
 import { z } from "zod";
+import { ETIQUETAS_ANIMO, MAX_ETIQUETAS_ANIMO, type EtiquetaAnimo } from "../constantes";
 import {
   colorSchema,
   diasSemanaSchema,
@@ -194,17 +195,27 @@ export const nivelAnimoSchema = z
   .min(1, { error: "El ánimo va de 1 a 5" })
   .max(5, { error: "El ánimo va de 1 a 5" });
 
+const etiquetaAnimoSchema = z.enum(ETIQUETAS_ANIMO.map((e) => e.id) as [EtiquetaAnimo, ...EtiquetaAnimo[]]);
+
 export const estadoAnimoSchema = z.object({
   usuario_id: uuidSchema,
   fecha: fechaSchema,
   nivel: nivelAnimoSchema,
   nota: z.string().nullable(),
+  // Si la base aún no tiene la columna (migración pendiente), se asume vacía.
+  etiquetas: z.array(etiquetaAnimoSchema).default([]),
 });
 
 export const estadoAnimoNuevoSchema = z.object({
   fecha: fechaSchema,
   nivel: nivelAnimoSchema,
   nota: textoOpcional(280, "La nota"),
+  /** Si se omite, al guardar se conservan las etiquetas que ya tenía el día. */
+  etiquetas: z
+    .array(etiquetaAnimoSchema)
+    .max(MAX_ETIQUETAS_ANIMO, { error: `Elige hasta ${MAX_ETIQUETAS_ANIMO}` })
+    .refine((l) => new Set(l).size === l.length, { error: "Hay etiquetas repetidas" })
+    .optional(),
 });
 
 // -----------------------------------------------------------------------------
