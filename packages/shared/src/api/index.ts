@@ -299,6 +299,29 @@ export async function listarLogros(cliente: ClienteDiarco) {
   return validar(await cliente.from("logros").select("*").order("id"), z.array(logroSchema));
 }
 
+const entero = z.coerce.number().int().min(0);
+const totalesLogrosSchema = z.object({
+  completados: entero,
+  dias_activos: entero,
+  actividades: entero,
+  minutos_registrados: entero,
+  actividades_madrugada: entero,
+  actividades_noche: entero,
+  animo_registros: entero,
+  habitos_creados: entero,
+  habitos_activos: entero,
+  categorias: entero,
+  bloques: entero,
+  minutos_planificados: entero,
+  notas: entero,
+});
+
+/** Conteos de toda la historia para evaluar logros (RPC totales_logros). */
+export async function obtenerTotalesLogros(cliente: ClienteDiarco) {
+  const filas = validar(await cliente.rpc("totales_logros"), z.array(totalesLogrosSchema).length(1));
+  return filas[0]!;
+}
+
 export async function listarUsuarioLogros(cliente: ClienteDiarco) {
   return validar(await cliente.from("usuario_logros").select("*"), z.array(usuarioLogroSchema));
 }

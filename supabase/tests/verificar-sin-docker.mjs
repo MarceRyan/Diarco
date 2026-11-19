@@ -108,7 +108,11 @@ ok(`conteos: ${JSON.stringify(conteos)}`);
 console.log("RLS:");
 await comoUsuario(DEMO, async () => {
   const r = await uno("select (select count(*) from public.habitos)::int h, (select count(*) from public.perfiles)::int p, (select count(*) from public.logros)::int l");
-  r.h === 5 && r.p === 1 && r.l === 9 ? ok(`demo ve sus 5 hábitos, solo su perfil y el catálogo de 9 logros`) : mal(`demo ve ${JSON.stringify(r)}`);
+  r.h === 5 && r.p === 1 && r.l === 109 ? ok(`demo ve sus 5 hábitos, solo su perfil y el catálogo de 109 logros`) : mal(`demo ve ${JSON.stringify(r)}`);
+  const t = await uno("select * from public.totales_logros()");
+  t.completados === 98 && t.actividades === 22 && t.habitos_creados === 5 && t.habitos_activos === 4 && t.bloques === 5 && t.notas === 1
+    ? ok(`totales_logros cuenta la historia del demo: ${JSON.stringify(t)}`)
+    : mal(`totales_logros: ${JSON.stringify(t)}`);
 });
 await comoUsuario(OTRO, async () => {
   const r = await uno(`select (select count(*) from public.habitos)::int h,
@@ -140,6 +144,11 @@ await debeFallar("usuario normal no puede crear logros", DEMO,
   `insert into public.logros (codigo, nombre, descripcion) values ('trampa', 'x', 'x')`, [], /permission denied/);
 await debeFallar("anon no puede leer hábitos", null, `select * from public.habitos`, [], /permission denied/);
 await debeFallar("anon no puede llamar resumen_diario", null, `select * from public.resumen_diario(current_date - 7, current_date)`, [], /permission denied/);
+await debeFallar("anon no puede llamar totales_logros", null, `select * from public.totales_logros()`, [], /permission denied/);
+await comoUsuario(OTRO, async () => {
+  const t = await uno("select * from public.totales_logros()");
+  t.completados === 0 && t.actividades === 0 ? ok("otro usuario no cuenta datos del demo en totales_logros") : mal(`otro ve totales ${JSON.stringify(t)}`);
+});
 
 // --- Restricciones -------------------------------------------------------------
 console.log("Restricciones:");

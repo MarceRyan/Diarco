@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { evaluarLogros, type CodigoLogro } from "../logic/logros";
+import { evaluarLogros, type CodigoLogro, type ContextoLogros } from "../logic/logros";
 import * as api from "../api";
 import { ZONA_HORARIA_POR_DEFECTO } from "../constantes";
 import { fechaEnZona, fechaHoy, sumarDias } from "../logic/fechas";
@@ -38,7 +38,9 @@ function useMutacion<V, R>(fn: (variables: V) => Promise<R>, invalidar: QueryKey
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSettled: () => Promise.all(invalidar.map((queryKey) => qc.invalidateQueries({ queryKey }))),
+    // Cualquier cambio puede acercar un logro: los totales siempre se recalculan.
+    onSettled: () =>
+      Promise.all([...invalidar, claves.totalesLogros].map((queryKey) => qc.invalidateQueries({ queryKey }))),
   });
 }
 
@@ -160,6 +162,7 @@ export function useMarcarHabito() {
       Promise.all([
         qc.invalidateQueries({ queryKey: claves.completados }),
         qc.invalidateQueries({ queryKey: claves.resumen }),
+        qc.invalidateQueries({ queryKey: claves.totalesLogros }),
       ]),
   });
 }
@@ -196,7 +199,11 @@ export function useGuardarNota() {
     onError: (_e, _v, contexto) => {
       if (contexto) qc.setQueryData(contexto.clave, contexto.anterior);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: claves.completados }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: claves.completados }),
+        qc.invalidateQueries({ queryKey: claves.totalesLogros }),
+      ]),
   });
 }
 
@@ -433,8 +440,14 @@ export function useAnimoRango(desde: Fecha, hasta: Fecha) {
 // Logros
 // -----------------------------------------------------------------------------
 
-/** Días hacia atrás que se revisan para los logros de constancia (bitácora y ánimo). */
-export const DIAS_REVISION_LOGROS = 90;
+/** Días hacia atrás que se revisan para rachas de bitácora, ánimo y variedad semanal. */
+export const DIAS_REVISION_LOGROS = 365;
+
+/** Conteos de toda la historia para los logros (RPC totales_logros). */
+export function useTotalesLogros() {
+  const cliente = useObtenerCliente();
+  return useQuery({ queryKey: claves.totalesLogros, queryFn: () => api.obtenerTotalesLogros(cliente()) });
+}
 
 /** Catálogo de logros con la fecha en que el usuario obtuvo cada uno (o null). */
 export function useLogros() {
@@ -461,6 +474,32 @@ export function useLogros() {
 }
 
 /**
+ * Todo lo que necesitan las reglas de logros, reunido en un solo objeto.
+ * Lo usan el vigilante (para otorgar) y la pantalla de Logros (para el progreso).
+ */
+export function useContextoLogros(): ContextoLogros | undefined {
+  const hoy = useHoy();
+  const { data: rachas } = useRachas();
+  const desde = sumarDias(hoy, -(DIAS_REVISION_LOGROS - 1));
+  const actividades = useActividadesRango(desde, hoy);
+  const animo = useAnimoRango(desde, hoy);
+  const totales = useTotalesLogros();
+
+  return useMemo(() => {
+    if (!rachas || !actividades.data || !animo.data || !totales.data) return undefined;
+    return {
+      hoy,
+      mejorRacha: Math.max(0, ...[...rachas.porHabito.values()].map((r) => r.maxima)),
+      mejorRachaGeneral: rachas.general.maxima,
+      resumenDiario: rachas.dias,
+      actividades: actividades.data,
+      fechasAnimo: animo.data.map((a) => a.fecha),
+      totales: totales.data,
+    };
+  }, [hoy, rachas, actividades.data, animo.data, totales.data]);
+}
+
+/**
  * Evalúa el historial del usuario y registra los logros nuevos.
  * Se monta una vez en la app; `onNuevos` recibe los logros recién obtenidos
  * (para mostrar un aviso). La regla de cada logro vive en logic/logros.ts.
@@ -468,12 +507,8 @@ export function useLogros() {
 export function useVigilanteLogros(onNuevos: (logros: { codigo: CodigoLogro; nombre: string }[]) => void) {
   const cliente = useObtenerCliente();
   const qc = useQueryClient();
-  const hoy = useHoy();
-  const { data: rachas } = useRachas();
+  const contexto = useContextoLogros();
   const logros = useLogros();
-  const rango = { desde: sumarDias(hoy, -(DIAS_REVISION_LOGROS - 1)), hasta: hoy };
-  const actividades = useActividadesRango(rango.desde, rango.hasta);
-  const animo = useAnimoRango(rango.desde, rango.hasta);
   // Códigos ya enviados en esta sesión: evita registrar dos veces mientras llega la respuesta.
   const enviados = useRef(new Set<string>());
   const avisar = useRef(onNuevos);
@@ -482,19 +517,11 @@ export function useVigilanteLogros(onNuevos: (logros: { codigo: CodigoLogro; nom
   });
 
   useEffect(() => {
-    if (!rachas || !logros.data || !actividades.data || !animo.data) return;
-
-    const cumplidos = evaluarLogros({
-      totalCompletados: rachas.totalCompletados,
-      mejorRacha: Math.max(0, ...[...rachas.porHabito.values()].map((r) => r.maxima)),
-      resumenDiario: rachas.dias,
-      fechasActividades: actividades.data.map((a) => a.fecha),
-      fechasAnimo: animo.data.map((a) => a.fecha),
-      hoy,
-    });
+    if (!contexto || !logros.data) return;
+    const cumplidos = new Set<string>(evaluarLogros(contexto));
 
     const nuevos = logros.data.filter(
-      (l) => l.obtenido_en === null && cumplidos.includes(l.codigo as CodigoLogro) && !enviados.current.has(l.codigo),
+      (l) => l.obtenido_en === null && cumplidos.has(l.codigo) && !enviados.current.has(l.codigo),
     );
     if (nuevos.length === 0) return;
 
@@ -509,5 +536,5 @@ export function useVigilanteLogros(onNuevos: (logros: { codigo: CodigoLogro; nom
         // Se reintentará en la próxima evaluación.
         nuevos.forEach((l) => enviados.current.delete(l.codigo));
       });
-  }, [rachas, logros.data, actividades.data, animo.data, hoy, cliente, qc]);
+  }, [contexto, logros.data, cliente, qc]);
 }

@@ -1,146 +1,252 @@
 "use client";
 
-import { DIAS_BITACORA_CONSTANTE, DIAS_BUEN_ANIMO, maximoDiasConsecutivos } from "@diarco/shared";
-import { DIAS_REVISION_LOGROS, useActividadesRango, useAnimoRango, useLogros, useRachas, useRango } from "@diarco/shared/hooks";
-import { Award, Lock } from "lucide-react";
+import { CATALOGO_LOGROS, GRUPOS_LOGRO, progresoLogros, type GrupoLogro, type ProgresoLogro } from "@diarco/shared";
+import { useContextoLogros, useLogros } from "@diarco/shared/hooks";
+import {
+  CheckCheck,
+  Flame,
+  LayoutGrid,
+  Lock,
+  NotebookPen,
+  Smile,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { Chispa } from "@/components/chispa";
 import { CargandoLista, claseTarjeta, Encabezado, MensajeError } from "@/components/ui/estados";
 
 const formatoFecha = new Intl.DateTimeFormat("es", { day: "numeric", month: "long", year: "numeric" });
 
+const ICONO_GRUPO: Record<GrupoLogro, LucideIcon> = {
+  rachas: Flame,
+  constancia: CheckCheck,
+  bitacora: NotebookPen,
+  animo: Smile,
+  organizacion: LayoutGrid,
+  especiales: Sparkles,
+};
+
+type FiltroEstado = "todas" | "ganadas" | "pendientes";
+
+/** Logro listo para mostrar: catálogo + fecha de obtención + progreso. */
+interface LogroVista {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  grupo: GrupoLogro;
+  obtenido_en: string | null;
+  progreso: ProgresoLogro | undefined;
+}
+
+const claseChip =
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 border-b-4 border-borde bg-tarjeta px-4 font-extrabold text-texto-suave transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-amarillo-labio aria-pressed:bg-amarillo aria-pressed:text-[#2a2342]";
+
 export function PantallaLogros() {
   const logros = useLogros();
-  const { data: rachas } = useRachas();
-  const { desde, hasta } = useRango(DIAS_REVISION_LOGROS);
-  const { data: actividades } = useActividadesRango(desde, hasta);
-  const { data: animo } = useAnimoRango(desde, hasta);
+  const contexto = useContextoLogros();
+  const [grupo, setGrupo] = useState<GrupoLogro | "todos">("todos");
+  const [estado, setEstado] = useState<FiltroEstado>("todas");
 
-  /** Progreso medible de cada logro pendiente: [valor actual, meta]. */
-  const progreso = (codigo: string): [number, number] | null => {
-    if (!rachas) return null;
-    const mejor = Math.max(0, ...[...rachas.porHabito.values()].map((r) => r.maxima));
-    const racha = /^racha_(\d+)$/.exec(codigo);
-    if (racha) return [mejor, Number(racha[1])];
-    if (codigo === "bitacora_constante" && actividades)
-      return [maximoDiasConsecutivos(actividades.map((a) => a.fecha)), DIAS_BITACORA_CONSTANTE];
-    if (codigo === "buen_animo" && animo) return [maximoDiasConsecutivos(animo.map((a) => a.fecha)), DIAS_BUEN_ANIMO];
-    return null;
-  };
+  // Une la tabla (fecha de obtención) con el catálogo (grupo) y el progreso calculado.
+  const vista = useMemo<LogroVista[] | undefined>(() => {
+    if (!logros.data) return undefined;
+    const progreso = new Map((contexto ? progresoLogros(contexto) : []).map((p) => [p.codigo as string, p]));
+    const catalogo = new Map(CATALOGO_LOGROS.map((l) => [l.codigo as string, l]));
+    return logros.data
+      .filter((l) => catalogo.has(l.codigo))
+      .map((l) => ({
+        ...l,
+        grupo: catalogo.get(l.codigo)!.grupo,
+        progreso: progreso.get(l.codigo),
+      }))
+      .sort((a, b) => CATALOGO_LOGROS.findIndex((c) => c.codigo === a.codigo) - CATALOGO_LOGROS.findIndex((c) => c.codigo === b.codigo));
+  }, [logros.data, contexto]);
 
-  const obtenidos = logros.data?.filter((l) => l.obtenido_en) ?? [];
-  const pendientes = logros.data?.filter((l) => !l.obtenido_en) ?? [];
-  const total = logros.data?.length ?? 0;
+  if (logros.isPending) return <CargandoLista filas={5} alto="h-24" />;
+  if (logros.error || !vista) return <MensajeError error={logros.error} onReintentar={() => logros.refetch()} />;
+
+  const ganadas = vista.filter((l) => l.obtenido_en);
+  const total = vista.length;
+  // Los 3 pendientes más cerca de cumplirse (con algo de avance).
+  const casi = vista
+    .filter((l) => !l.obtenido_en && l.progreso && l.progreso.valor > 0)
+    .sort((a, b) => b.progreso!.valor / b.progreso!.meta - a.progreso!.valor / a.progreso!.meta)
+    .slice(0, 3);
+
+  const visibles = vista.filter(
+    (l) =>
+      (grupo === "todos" || l.grupo === grupo) &&
+      (estado === "todas" || (estado === "ganadas" ? l.obtenido_en : !l.obtenido_en)),
+  );
+  const gruposVisibles = GRUPOS_LOGRO.filter((g) => visibles.some((l) => l.grupo === g.id));
 
   return (
     <>
-      <Encabezado titulo="Tus logros" />
+      <Encabezado titulo="Tus logros" subtitulo="Cada medalla es una prueba de tu constancia." />
 
-      {logros.isPending ? (
-        <CargandoLista filas={5} alto="h-24" />
-      ) : logros.error ? (
-        <MensajeError error={logros.error} onReintentar={() => logros.refetch()} />
-      ) : (
-        <div className="space-y-8">
-          {/* Resumen con Chispa */}
-          <section className={`${claseTarjeta} flex items-center gap-4 bg-amarillo-suave p-5`} aria-label="Resumen de logros">
-            <Chispa estado={obtenidos.length > 0 ? "celebrando" : "feliz"} tamano={72} className="shrink-0" />
+      <div className="space-y-8">
+        {/* Resumen con Chispa y avance por grupo */}
+        <section className={`${claseTarjeta} grid gap-5 bg-amarillo-suave p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]`} aria-label="Resumen de logros">
+          <div className="flex items-center gap-4">
+            <Chispa estado={ganadas.length > 0 ? "celebrando" : "feliz"} tamano={76} className="shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="font-titulo text-3xl font-extrabold text-amarillo-texto">
-                {obtenidos.length} de {total} medallas
+                {ganadas.length} de {total} medallas
               </p>
               <p className="font-bold">
-                {obtenidos.length === 0
+                {ganadas.length === 0
                   ? "Marca tu primer hábito en Hoy para ganar «Primer paso»."
-                  : obtenidos.length === total
+                  : ganadas.length === total
                     ? "¡Las tienes todas! Eres una leyenda."
-                    : "¡Vas muy bien! Sigue sumando días."}
+                    : "¡Vas muy bien! Cada día suma."}
               </p>
               <div className="mt-2 h-3 overflow-hidden rounded-full bg-tarjeta" aria-hidden>
-                <div
-                  className="h-full rounded-full bg-amarillo"
-                  style={{ width: `${total > 0 ? (obtenidos.length / total) * 100 : 0}%` }}
-                />
+                <div className="h-full rounded-full bg-amarillo" style={{ width: `${(ganadas.length / total) * 100}%` }} />
               </div>
             </div>
+          </div>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3" aria-label="Medallas por grupo">
+            {GRUPOS_LOGRO.map((g) => {
+              const Icono = ICONO_GRUPO[g.id];
+              const delGrupo = vista.filter((l) => l.grupo === g.id);
+              return (
+                <li key={g.id} className="flex items-center gap-2 rounded-2xl bg-tarjeta px-3 py-2">
+                  <Icono className="size-5 shrink-0 text-amarillo-texto" strokeWidth={2.5} aria-hidden />
+                  <span className="min-w-0 flex-1 truncate font-bold">{g.nombre}</span>
+                  <span className="font-extrabold tabular-nums text-texto-suave">
+                    {delGrupo.filter((l) => l.obtenido_en).length}/{delGrupo.length}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* Los más cercanos */}
+        {casi.length > 0 && (
+          <section aria-labelledby="titulo-casi">
+            <h2 id="titulo-casi" className="mb-3 font-titulo text-2xl font-bold">
+              ¡Casi lo tienes!
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {casi.map((l) => (
+                <TarjetaLogro key={l.id} logro={l} />
+              ))}
+            </ul>
           </section>
+        )}
 
-          {obtenidos.length > 0 && (
-            <section aria-labelledby="titulo-obtenidos">
-              <h2 id="titulo-obtenidos" className="mb-3 font-titulo text-2xl font-bold">
-                Ganadas
-              </h2>
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {obtenidos.map((l) => (
-                  <li key={l.id} className={`${claseTarjeta} flex items-center gap-4 p-4`}>
-                    <Medalla ganada />
-                    <div className="min-w-0">
-                      <p className="font-titulo text-xl font-bold">{l.nombre}</p>
-                      <p className="text-texto-suave">{l.descripcion}</p>
-                      <p className="mt-1 text-sm font-extrabold text-amarillo-texto">
-                        {formatoFecha.format(new Date(l.obtenido_en!))}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {pendientes.length > 0 && (
-            <section aria-labelledby="titulo-pendientes">
-              <h2 id="titulo-pendientes" className="mb-3 font-titulo text-2xl font-bold">
-                Por ganar
-              </h2>
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {pendientes.map((l) => {
-                  const p = progreso(l.codigo);
-                  const porcentaje = p ? Math.min(100, Math.round((p[0] / p[1]) * 100)) : null;
-                  return (
-                    <li key={l.id} className={`${claseTarjeta} flex items-center gap-4 p-4`}>
-                      <Medalla />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-titulo text-xl font-bold">{l.nombre}</p>
-                        <p className="text-texto-suave">{l.descripcion}</p>
-                        {p && porcentaje !== null && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <div
-                              className="h-3 flex-1 overflow-hidden rounded-full bg-superficie-2"
-                              role="progressbar"
-                              aria-valuenow={Math.min(p[0], p[1])}
-                              aria-valuemin={0}
-                              aria-valuemax={p[1]}
-                              aria-label={`Progreso de ${l.nombre}`}
-                            >
-                              <div className="h-full rounded-full bg-amarillo" style={{ width: `${porcentaje}%` }} />
-                            </div>
-                            <span className="shrink-0 text-sm font-extrabold text-texto-suave tabular-nums">
-                              {Math.min(p[0], p[1])}/{p[1]}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          )}
+        {/* Filtros */}
+        <div className="space-y-3">
+          <div role="group" aria-label="Filtrar por grupo" className="flex flex-wrap gap-2">
+            <button type="button" aria-pressed={grupo === "todos"} onClick={() => setGrupo("todos")} className={claseChip}>
+              Todos
+            </button>
+            {GRUPOS_LOGRO.map((g) => {
+              const Icono = ICONO_GRUPO[g.id];
+              return (
+                <button key={g.id} type="button" aria-pressed={grupo === g.id} onClick={() => setGrupo(g.id)} className={claseChip}>
+                  <Icono className="size-4" strokeWidth={2.5} aria-hidden />
+                  {g.nombre}
+                </button>
+              );
+            })}
+          </div>
+          <div role="group" aria-label="Filtrar por estado" className="flex flex-wrap gap-2">
+            {(
+              [
+                { id: "todas", nombre: "Todas" },
+                { id: "ganadas", nombre: `Ganadas (${ganadas.length})` },
+                { id: "pendientes", nombre: `Por ganar (${total - ganadas.length})` },
+              ] as const
+            ).map((e) => (
+              <button key={e.id} type="button" aria-pressed={estado === e.id} onClick={() => setEstado(e.id)} className={claseChip}>
+                {e.nombre}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+
+        {/* Medallas agrupadas */}
+        {visibles.length === 0 ? (
+          <p className={`${claseTarjeta} p-5 text-center text-texto-suave`}>
+            {estado === "ganadas" ? "Aún no ganas medallas en este grupo. ¡Ya llegarán!" : "No hay medallas con estos filtros."}
+          </p>
+        ) : (
+          gruposVisibles.map((g) => {
+            const Icono = ICONO_GRUPO[g.id];
+            const lista = visibles.filter((l) => l.grupo === g.id);
+            return (
+              <section key={g.id} aria-labelledby={`grupo-${g.id}`}>
+                <h2 id={`grupo-${g.id}`} className="mb-3 flex items-center gap-2 font-titulo text-2xl font-bold">
+                  <Icono className="size-6 text-amarillo-texto" strokeWidth={2.5} aria-hidden />
+                  {g.nombre}
+                  <span className="text-base text-texto-suave">
+                    {lista.filter((l) => l.obtenido_en).length}/{lista.length}
+                  </span>
+                </h2>
+                <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {lista.map((l) => (
+                    <TarjetaLogro key={l.id} logro={l} />
+                  ))}
+                </ul>
+              </section>
+            );
+          })
+        )}
+      </div>
     </>
   );
 }
 
-/** Medalla redonda con labio: dorada si se ganó, gris con candado si no. */
-function Medalla({ ganada = false }: { ganada?: boolean }) {
+function TarjetaLogro({ logro }: { logro: LogroVista }) {
+  const ganada = logro.obtenido_en !== null;
+  const Icono = ICONO_GRUPO[logro.grupo];
+  const p = logro.progreso;
+  const porcentaje = p ? Math.round((p.valor / p.meta) * 100) : 0;
+
   return (
-    <span
-      aria-hidden
-      className={`flex size-16 shrink-0 items-center justify-center rounded-full border-b-4 ${
-        ganada ? "border-amarillo-labio bg-amarillo text-[#2a2342]" : "border-borde-fuerte bg-superficie-2 text-texto-suave"
-      }`}
-    >
-      {ganada ? <Award className="size-8" strokeWidth={2.5} /> : <Lock className="size-6" strokeWidth={2.5} />}
-    </span>
+    <li className={`${claseTarjeta} flex items-center gap-4 p-4`}>
+      <span
+        aria-hidden
+        className={`relative flex size-16 shrink-0 items-center justify-center rounded-full border-b-4 ${
+          ganada ? "border-amarillo-labio bg-amarillo text-[#2a2342]" : "border-borde-fuerte bg-superficie-2 text-texto-suave"
+        }`}
+      >
+        <Icono className="size-7" strokeWidth={2.5} />
+        {!ganada && (
+          <span className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full bg-tarjeta ring-2 ring-borde-fuerte">
+            <Lock className="size-3.5" strokeWidth={3} />
+          </span>
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-titulo text-xl leading-tight font-bold">{logro.nombre}</p>
+        <p className="text-texto-suave">{logro.descripcion}</p>
+        {ganada ? (
+          <p className="mt-1 text-sm font-extrabold text-amarillo-texto">{formatoFecha.format(new Date(logro.obtenido_en!))}</p>
+        ) : (
+          p && (
+            <div className="mt-2 flex items-center gap-2">
+              <div
+                className="h-3 flex-1 overflow-hidden rounded-full bg-superficie-2"
+                role="progressbar"
+                aria-valuenow={p.valor}
+                aria-valuemin={0}
+                aria-valuemax={p.meta}
+                aria-label={`Progreso de ${logro.nombre}`}
+              >
+                <div className="h-full rounded-full bg-amarillo" style={{ width: `${porcentaje}%` }} />
+              </div>
+              <span className="shrink-0 text-sm font-extrabold text-texto-suave tabular-nums">
+                {p.valor}/{p.meta}
+              </span>
+            </div>
+          )
+        )}
+      </div>
+    </li>
   );
 }

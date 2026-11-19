@@ -47,6 +47,7 @@ export const claves = {
   actividadesRango: (desde: Fecha, hasta: Fecha) => ["actividades", "rango", desde, hasta] as const,
   animoRango: (desde: Fecha, hasta: Fecha) => ["animo", "rango", desde, hasta] as const,
   logros: ["logros"] as const,
+  totalesLogros: ["totales_logros"] as const,
   usuarioLogros: ["usuario_logros"] as const,
   categorias: ["categorias"] as const,
   actividades: ["actividades"] as const,

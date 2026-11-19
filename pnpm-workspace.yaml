@@ -5,5 +5,6 @@ packages:
 # pnpm solo ejecuta scripts de instalación de los paquetes aprobados aquí.
 allowBuilds:
   supabase: true # descarga el binario de Supabase CLI
+  esbuild: true # binario que usa tsx (scripts en TypeScript)
   sharp: false
   unrs-resolver: false

@@ -13,6 +13,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "generar:logros": "tsx scripts/generar-logros.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "19.3.0",
     "react": "19.3.0",
+    "tsx": "4.23.15",
     "typescript": "~6.0.3",
     "vitest": "^5.1.1"
   },
