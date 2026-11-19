@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calcularRachaGeneral,
   calcularRachaHabito,
+  construirResumenDiario,
   cumpleUmbral,
   hitoAlcanzado,
   rangoFechas,
@@ -242,6 +243,41 @@ describe("calcularRachaGeneral", () => {
       porcentajeHoy: null,
       cumpleHoy: false,
     });
+  });
+});
+
+describe("construirResumenDiario", () => {
+  it("cuenta programados según días de la semana y fecha de creación", () => {
+    const r = construirResumenDiario({
+      habitos: [
+        { id: 1, diasSemana: TODOS, desde: "2026-11-01" },
+        { id: 2, diasSemana: LUN_A_VIE, desde: "2026-11-01" },
+        { id: 3, diasSemana: TODOS, desde: "2026-11-15" }, // creado el domingo 15
+      ],
+      completados: [
+        { habito_id: 1, fecha: "2026-11-14" },
+        { habito_id: 1, fecha: "2026-11-16" },
+        { habito_id: 2, fecha: "2026-11-16" },
+        { habito_id: 2, fecha: "2026-11-15" }, // domingo: no programado, no cuenta
+      ],
+      desde: "2026-11-14",
+      hasta: "2026-11-16",
+    });
+    expect(r).toEqual([
+      { fecha: "2026-11-14", programados: 1, completados: 1 }, // sábado
+      { fecha: "2026-11-15", programados: 2, completados: 0 }, // domingo: 1 y 3
+      { fecha: "2026-11-16", programados: 3, completados: 2 }, // lunes
+    ]);
+  });
+
+  it("alimenta la racha general", () => {
+    const dias = construirResumenDiario({
+      habitos: [{ id: 1, diasSemana: TODOS, desde: "2026-11-01" }],
+      completados: rangoFechas("2026-11-15", HOY).map((fecha) => ({ habito_id: 1, fecha })),
+      desde: "2026-11-01",
+      hasta: HOY,
+    });
+    expect(calcularRachaGeneral({ dias, hoy: HOY }).actual).toBe(5);
   });
 });
 

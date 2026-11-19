@@ -204,6 +204,46 @@ export function calcularRachaGeneral(entrada: EntradaRachaGeneral): RachaGeneral
 }
 
 // -----------------------------------------------------------------------------
+// Resumen diario calculado en el cliente
+// -----------------------------------------------------------------------------
+
+export interface EntradaResumenDiario {
+  /** Hábitos activos con sus días programados y su primer día (creación). */
+  habitos: readonly { id: number; diasSemana: readonly number[]; desde: Fecha }[];
+  /** Registros completados (habito_id + fecha). */
+  completados: readonly { habito_id: number; fecha: Fecha }[];
+  desde: Fecha;
+  hasta: Fecha;
+}
+
+/**
+ * Resumen por día (programados / completados), equivalente a la RPC
+ * resumen_diario. Calcularlo en el cliente permite que la racha general se
+ * actualice al instante al marcar un hábito, sin esperar al servidor.
+ */
+export function construirResumenDiario(entrada: EntradaResumenDiario): DiaResumen[] {
+  const hechosPorFecha = new Map<Fecha, Set<number>>();
+  for (const r of entrada.completados) {
+    const hechos = hechosPorFecha.get(r.fecha) ?? new Set<number>();
+    hechos.add(r.habito_id);
+    hechosPorFecha.set(r.fecha, hechos);
+  }
+
+  return rangoFechas(entrada.desde, entrada.hasta).map((fecha) => {
+    const dia = diaSemana(fecha);
+    const programados = entrada.habitos.filter(
+      (h) => compararFechas(h.desde, fecha) <= 0 && h.diasSemana.includes(dia),
+    );
+    const hechos = hechosPorFecha.get(fecha);
+    return {
+      fecha,
+      programados: programados.length,
+      completados: programados.filter((h) => hechos?.has(h.id)).length,
+    };
+  });
+}
+
+// -----------------------------------------------------------------------------
 // Hitos (avisos al llegar a 3, 7, 21, 30 y 100)
 // -----------------------------------------------------------------------------
 

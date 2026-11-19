@@ -23,7 +23,7 @@ Es un proyecto personal y de portafolio: el código debe ser limpio, tipado y do
 ## Estructura
 ```
 diarco/
-├── apps/web/          (app/(auth), app/(app)/hoy|habitos|horario|bitacora|estadisticas|logros|configuracion, components/, lib/supabase/, middleware.ts)
+├── apps/web/          (app/(auth), app/(app)/hoy|habitos|horario|bitacora|estadisticas|logros|configuracion, components/, lib/supabase/, proxy.ts)
 ├── apps/mobile/       (src/app/(auth), src/app/(tabs)/hoy|habitos|horario|bitacora|perfil, src/components/, src/lib/)
 ├── packages/shared/   (src/types, src/schemas, src/logic/rachas.ts|estadisticas.ts|logros.ts, src/api, tests/)
 └── supabase/          (migrations/, functions/, seed.sql, config.toml)
@@ -86,4 +86,10 @@ Todas las tablas con RLS activado: cada usuario solo lee y escribe sus filas.
 ## Notas de configuración
 - `.npmrc` usa `node-linker=hoisted` para compatibilidad con React Native.
 - `@diarco/shared` se consume como TypeScript fuente (sin build); Next lo compila vía `transpilePackages`.
+  - `@diarco/shared`: tipos, esquemas, lógica y consultas (`api/`), sin React.
+  - `@diarco/shared/hooks`: hooks de TanStack Query + `<ProveedorDiarco crearCliente>`; las pantallas usan solo estos hooks.
+- Next.js 16: el middleware se llama `proxy.ts`. Con `cacheComponents`, el área `(app)` se renderiza por petición
+  (`connection()` dentro de `<Suspense>` en su layout). Leer la doc local en `node_modules/next/dist/docs/` ante dudas.
+- Sesión: `proxy.ts` llama a `supabase.auth.getClaims()` (nunca confiar en `getSession()` en el servidor). La seguridad de datos es RLS.
+- Dependencias nuevas: fijar versiones exactas con al menos una semana de publicadas.
 - pnpm solo ejecuta scripts de instalación de los paquetes listados en `allowBuilds` (`pnpm-workspace.yaml`).

@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
+/*
+ * Tokens de diseño de Diarco.
+ * Los colores se definen como variables CSS y cambian solos en modo oscuro
+ * (según la preferencia del sistema). En los componentes se usan como clases
+ * de Tailwind: bg-fondo, text-texto, bg-mandarina, border-borde, etc.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --fondo: #ffffff;
+  --superficie: #f7f6f3;
+  --superficie-2: #efede8;
+  --borde: #e4e1da;
+  --texto: #1c1b1f;
+  --texto-suave: #5f5c66;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --mandarina: #ff6a2b;
+  --mandarina-texto: #c2410c; /* variante con contraste AA sobre fondo claro */
+  --mandarina-suave: #fff0e8;
+  --violeta: #6741d9;
+  --violeta-suave: #efeafd;
+  --sobre-violeta: #ffffff; /* texto sobre botones violeta */
+  --exito: #2f9e44;
+  --peligro: #c92a2a;
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --fondo: #121114;
+    --superficie: #1c1b20;
+    --superficie-2: #26242b;
+    --borde: #34313a;
+    --texto: #f2f0f5;
+    --texto-suave: #a9a5b2;
+
+    --mandarina-texto: #ff8c5a;
+    --mandarina-suave: #3a1f12;
+    --violeta: #9b7ff0;
+    --violeta-suave: #2a2240;
+    --sobre-violeta: #121114;
+    --exito: #51cf66;
+    --peligro: #ff8a5c;
+
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-borde: var(--borde);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-mandarina: var(--mandarina);
+  --color-mandarina-texto: var(--mandarina-texto);
+  --color-mandarina-suave: var(--mandarina-suave);
+  --color-violeta: var(--violeta);
+  --color-violeta-suave: var(--violeta-suave);
+  --color-sobre-violeta: var(--sobre-violeta);
+  --color-exito: var(--exito);
+  --color-peligro: var(--peligro);
+
+  --font-titulo: var(--font-sora);
+  --font-sans: var(--font-inter);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+/* Foco visible y consistente para navegación con teclado. */
+:focus-visible {
+  outline: 2px solid var(--violeta);
+  outline-offset: 2px;
+}
+
+/* Fondo del diálogo nativo. */
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
