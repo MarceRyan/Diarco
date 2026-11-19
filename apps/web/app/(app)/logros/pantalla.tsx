@@ -1,7 +1,7 @@
 "use client";
 
 import { CATALOGO_LOGROS, GRUPOS_LOGRO, progresoLogros, type GrupoLogro, type ProgresoLogro } from "@diarco/shared";
-import { useContextoLogros, useLogros } from "@diarco/shared/hooks";
+import { useContextoLogros, useLogros, useTotalesLogros } from "@diarco/shared/hooks";
 import {
   CheckCheck,
   Flame,
@@ -49,23 +49,33 @@ export function PantallaLogros() {
   const [grupo, setGrupo] = useState<GrupoLogro | "todos">("todos");
   const [estado, setEstado] = useState<FiltroEstado>("todas");
 
-  // Une la tabla (fecha de obtención) con el catálogo (grupo) y el progreso calculado.
+  const totales = useTotalesLogros();
+
+  // El catálogo vive en el código (siempre completo); la base solo dice cuáles ganaste.
   const vista = useMemo<LogroVista[] | undefined>(() => {
     if (!logros.data) return undefined;
     const progreso = new Map((contexto ? progresoLogros(contexto) : []).map((p) => [p.codigo as string, p]));
-    const catalogo = new Map(CATALOGO_LOGROS.map((l) => [l.codigo as string, l]));
-    return logros.data
-      .filter((l) => catalogo.has(l.codigo))
-      .map((l) => ({
-        ...l,
-        grupo: catalogo.get(l.codigo)!.grupo,
+    const enBase = new Map(logros.data.map((l) => [l.codigo, l]));
+    return CATALOGO_LOGROS.map((l, i) => {
+      const fila = enBase.get(l.codigo);
+      return {
+        id: fila?.id ?? -(i + 1), // sin fila en la base: no se puede registrar aún
+        codigo: l.codigo,
+        nombre: l.nombre,
+        descripcion: l.descripcion,
+        grupo: l.grupo,
+        obtenido_en: fila?.obtenido_en ?? null,
         progreso: progreso.get(l.codigo),
-      }))
-      .sort((a, b) => CATALOGO_LOGROS.findIndex((c) => c.codigo === a.codigo) - CATALOGO_LOGROS.findIndex((c) => c.codigo === b.codigo));
+      };
+    });
   }, [logros.data, contexto]);
 
   if (logros.isPending) return <CargandoLista filas={5} alto="h-24" />;
   if (logros.error || !vista) return <MensajeError error={logros.error} onReintentar={() => logros.refetch()} />;
+
+  // La base está desactualizada si le faltan logros del catálogo o la función de totales.
+  const faltanEnBase = vista.filter((l) => l.id < 0).length;
+  const baseDesactualizada = faltanEnBase > 0 || Boolean(totales.error);
 
   const ganadas = vista.filter((l) => l.obtenido_en);
   const total = vista.length;
@@ -87,6 +97,19 @@ export function PantallaLogros() {
       <Encabezado titulo="Tus logros" subtitulo="Cada medalla es una prueba de tu constancia." />
 
       <div className="space-y-8">
+        {baseDesactualizada && (
+          <div role="alert" className="rounded-[20px] border-2 border-mandarina/50 bg-mandarina-suave p-4">
+            <p className="font-titulo text-xl font-bold">Tu base de datos necesita actualizarse</p>
+            <p className="mt-1 text-texto-suave">
+              {faltanEnBase > 0
+                ? `Faltan ${faltanEnBase} logros en la base, así que todavía no se pueden ganar.`
+                : "Falta la función que cuenta tu historial, así que no se ve el progreso."}{" "}
+              Aplica las migraciones nuevas desde la carpeta del proyecto:
+            </p>
+            <code className="mt-2 block rounded-xl bg-tarjeta px-3 py-2 text-sm font-bold">pnpm exec supabase db push --remote</code>
+          </div>
+        )}
+
         {/* Resumen con Chispa y avance por grupo */}
         <section className={`${claseTarjeta} grid gap-5 bg-amarillo-suave p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]`} aria-label="Resumen de logros">
           <div className="flex items-center gap-4">
