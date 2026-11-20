@@ -6,6 +6,8 @@
 
 Next.js 16 · React 19 · Tailwind CSS 4 · Supabase · TanStack Query · Turborepo
 
+**[Ver Diarco en vivo → diarco.vercel.app](https://diarco.vercel.app)**
+
 </div>
 
 ![Pantalla Hoy de Diarco](docs/capturas/hoy.png)
