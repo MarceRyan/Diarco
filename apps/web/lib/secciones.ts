@@ -11,7 +11,6 @@ import {
   NotebookPen,
   Settings,
   Sprout,
-  Tent,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,7 +32,6 @@ export const PRINCIPALES: Seccion[] = [
 ];
 
 export const SECUNDARIOS: Seccion[] = [
-  { href: "/chispa", etiqueta: "Chispa", descripcion: "Su casa: mírala crecer con tu leña", Icono: Tent, color: "mandarina" },
   { href: "/estadisticas", etiqueta: "Progreso", descripcion: "Cómo vas, en gráficos", Icono: ChartColumn, color: "violeta" },
   { href: "/logros", etiqueta: "Logros", descripcion: "Las medallas que ganaste", Icono: Award, color: "amarillo" },
   { href: "/configuracion", etiqueta: "Ajustes", descripcion: "Perfil, rachas y apariencia", Icono: Settings, color: "neutro" },

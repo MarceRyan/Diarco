@@ -25,7 +25,7 @@ test("recuperar contraseña valida el correo", async ({ page }) => {
   await expect(page.getByText("Escribe un correo válido")).toBeVisible();
 });
 
-for (const ruta of ["/hoy", "/habitos", "/horario", "/bitacora", "/chispa", "/estadisticas", "/logros", "/configuracion", "/nueva-contrasena"]) {
+for (const ruta of ["/hoy", "/habitos", "/horario", "/bitacora","/estadisticas", "/logros", "/configuracion", "/nueva-contrasena"]) {
   test(`sin sesión, ${ruta} lleva al login`, async ({ page }) => {
     await page.goto(ruta);
     await expect(page).toHaveURL(/\/login$/);

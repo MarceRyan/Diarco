@@ -1,10 +1,9 @@
 /**
- * Chispa: la racha hecha personaje. En 2D imita el look de su versión 3D:
+ * Chispa: la racha hecha personaje. Tiene look de volumen:
  * cuerpo con volumen (degradados y brillo especular), ojos grandes y brillantes
  * con iris que sigue al puntero (variables CSS --mx / --my) y sombra en el suelo.
- * Con `viva`, la llama titila y parpadea. CuerpoChispa se puede recolorear y vestir.
+ * Con `viva`, la llama titila y parpadea. CuerpoChispa se puede recolorear.
  */
-import type { Estacion } from "@diarco/shared";
 import { useId } from "react";
 
 export type EstadoChispa = "feliz" | "emocionada" | "celebrando" | "preocupada" | "dormida";
@@ -38,19 +37,17 @@ function Ojo({ cx, grande, id }: { cx: number; grande: boolean; id: string }) {
 
 /**
  * Cuerpo de Chispa en coordenadas 0..100 × 0..108 (para usar dentro de otro <svg>).
- * `exterior`/`interior` cambian los colores de la llama; `accesorio` la viste según la estación.
+ * `exterior`/`interior` cambian los colores de la llama.
  */
 export function CuerpoChispa({
   estado = "feliz",
   exterior = "var(--mandarina)",
   interior = "var(--amarillo)",
-  accesorio,
   viva = false,
 }: {
   estado?: EstadoChispa;
   exterior?: string;
   interior?: string;
-  accesorio?: Estacion;
   /** Llama que titila y ojos que parpadean. */
   viva?: boolean;
 }) {
@@ -100,16 +97,6 @@ export function CuerpoChispa({
       {/* Brillo especular arriba a la izquierda */}
       <ellipse cx="33" cy="50" rx="7" ry="11" fill={`url(#${id}-brillo)`} transform="rotate(-25 33 50)" />
 
-      {/* Gorro de invierno */}
-      {accesorio === "invierno" && (
-        <g>
-          <path d="M27 40 C29 18 71 18 73 40 Z" fill="#e64980" />
-          <path d="M33 26 C40 20 52 19 58 22" stroke="#ff8fb5" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.7" />
-          <rect x="23" y="36" width="54" height="10" rx="5" fill="#f8f6ff" />
-          <circle cx="50" cy="18" r="6.5" fill="#f8f6ff" />
-        </g>
-      )}
-
       {/* Mejillas */}
       {!apagada && (
         <>
@@ -119,7 +106,7 @@ export function CuerpoChispa({
       )}
 
       {/* Ojos */}
-      {ojosAbiertos && accesorio !== "verano" && (
+      {ojosAbiertos && (
         <g className={animar ? "chispa-parpadeo" : undefined}>
           <Ojo cx={39} grande={estado === "emocionada"} id={id} />
           <Ojo cx={61} grande={estado === "emocionada"} id={id} />
@@ -131,7 +118,7 @@ export function CuerpoChispa({
           <path d="M69 58 L56 62" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
         </>
       )}
-      {estado === "celebrando" && accesorio !== "verano" && (
+      {estado === "celebrando" && (
         <>
           <path d="M33 72 Q39 63 45 72" fill="none" stroke={CARA} strokeWidth="3.5" strokeLinecap="round" />
           <path d="M55 72 Q61 63 67 72" fill="none" stroke={CARA} strokeWidth="3.5" strokeLinecap="round" />
@@ -142,17 +129,6 @@ export function CuerpoChispa({
           <path d="M33 71 Q39 76 45 71" fill="none" stroke={tinta} strokeWidth="3" strokeLinecap="round" />
           <path d="M55 71 Q61 76 67 71" fill="none" stroke={tinta} strokeWidth="3" strokeLinecap="round" />
         </>
-      )}
-
-      {/* Lentes de sol de verano (en lugar de los ojos, salvo dormida) */}
-      {accesorio === "verano" && !apagada && (
-        <g>
-          <rect x="28" y="63" width="20" height="13" rx="6" fill={CARA} />
-          <rect x="52" y="63" width="20" height="13" rx="6" fill={CARA} />
-          <path d="M48 67 L52 67" stroke={CARA} strokeWidth="2.5" />
-          <path d="M31 67 L38 66" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" opacity="0.75" />
-          <path d="M55 67 L62 66" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" opacity="0.75" />
-        </g>
       )}
 
       {/* Boca */}
@@ -167,26 +143,6 @@ export function CuerpoChispa({
         <path d="M44 88 Q47 85 50 88 Q53 91 56 88" fill="none" stroke={CARA} strokeWidth="3" strokeLinecap="round" />
       )}
       {estado === "dormida" && <circle cx="50" cy="85" r="2.6" fill={tinta} />}
-
-      {/* Bufanda de otoño */}
-      {accesorio === "otono" && (
-        <g>
-          <path d="M19 90 Q50 101 81 90 L83 99 Q50 110 17 99 Z" fill="#6741d9" />
-          <path d="M22 92 Q50 102 78 92" stroke="#9378ec" strokeWidth="2" fill="none" opacity="0.8" />
-          <rect x="60" y="97" width="10" height="12" rx="3.5" fill="#5733c4" />
-        </g>
-      )}
-
-      {/* Flor de primavera */}
-      {accesorio === "primavera" && (
-        <g transform="translate(71 45)">
-          {[0, 72, 144, 216, 288].map((giro) => (
-            <ellipse key={giro} cx="0" cy="-6" rx="4.4" ry="6.2" fill="#ff8fb1" transform={`rotate(${giro})`} />
-          ))}
-          <circle r="3.8" fill="#ffc23d" />
-          <circle cx="-1" cy="-1" r="1.3" fill="#fff" opacity="0.7" />
-        </g>
-      )}
     </g>
   );
 }

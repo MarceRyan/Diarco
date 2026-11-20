@@ -12,9 +12,6 @@
   },
   "dependencies": {
     "@diarco/shared": "workspace:*",
-    "@react-three/drei": "10.7.9",
-    "@react-three/fiber": "9.8.2",
-    "@react-three/postprocessing": "3.2.2",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.0",
     "@tanstack/react-query": "5.107.1",
@@ -24,7 +21,6 @@
     "react-dom": "19.3.0",
     "recharts": "3.10.1",
     "server-only": "0.0.1",
-    "three": "0.187.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -33,7 +29,6 @@
     "@types/node": "20",
     "@types/react": "19",
     "@types/react-dom": "19",
-    "@types/three": "0.187.0",
     "eslint": "9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
