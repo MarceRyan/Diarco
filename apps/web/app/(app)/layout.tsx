@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AvisoConfiguracion } from "@/components/aviso-configuracion";
 import { ContenedorPrincipal } from "@/components/contenedor-principal";
 import { EnfoqueGlobal } from "@/components/enfoque/pantalla-enfoque";
+import { GuiaBienvenida } from "@/components/guia-bienvenida";
 import { Navegacion } from "@/components/navegacion";
 import { CargandoLista, Esqueleto } from "@/components/ui/estados";
 import { VigilanteLogros } from "@/components/vigilante-logros";
@@ -41,6 +42,7 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
               {children}
               <VigilanteLogros />
               <EnfoqueGlobal />
+              <GuiaBienvenida />
             </EnPeticion>
           </Suspense>
         </ContenedorPrincipal>

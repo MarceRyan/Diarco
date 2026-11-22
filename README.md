@@ -20,6 +20,7 @@ y celebra contigo cada día cumplido.
 
 | | |
 |---|---|
+| **Guía de bienvenida** | La primera vez, Chispa explica cada parte de la app en 10 pasos cortos, con palabras sencillas. Se puede omitir y volver a ver desde Ajustes. |
 | **Hoy** | Racha general, progreso del día, hábitos para marcar, agenda, ánimo y modo enfoque. |
 | **Hábitos** | Hábitos con días de la semana, meta, ícono y color. Racha y mejor marca por hábito. |
 | **Rutina** | Tareas de cada día sin hora ni racha (tender la cama, lavar los platos): se marcan en Hoy sin presión. |

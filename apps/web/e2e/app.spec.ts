@@ -12,6 +12,10 @@ const puedeMutar = process.env.E2E_MUTAR === "1";
 test.skip(!correo || !clave, "Define E2E_EMAIL y E2E_PASSWORD para las pruebas con sesión");
 
 async function entrar(page: Page) {
+  // La guía de bienvenida se marca como vista para que no tape las pantallas.
+  await page.addInitScript(() => {
+    for (const id of ["d3b07384-d9a0-4c9e-8f1a-000000000001"]) localStorage.setItem(`diarco-guia-vista-${id}`, "si");
+  });
   await page.goto("/login");
   await page.getByLabel("Correo").fill(correo!);
   await page.getByLabel("Contraseña").fill(clave!);

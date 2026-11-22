@@ -3,9 +3,10 @@
 import { perfilActualizarSchema, type Perfil } from "@diarco/shared";
 import { useActualizarPerfil, useObtenerCliente, usePerfil } from "@diarco/shared/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { Check, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import { BookOpen, Check, LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { useCerrarSesion } from "@/components/navegacion";
+import { abrirGuia } from "@/components/guia-bienvenida";
 import { InstalarApp } from "@/components/pwa";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Selector } from "@/components/ui/campos";
@@ -30,6 +31,12 @@ export function PantallaConfiguracion() {
           )}
         </div>
         <div className="min-w-0 space-y-6">
+          <Seccion titulo="¿Cómo se usa Diarco?" descripcion="Chispa te explica en un minuto cada parte de la app.">
+            <Boton variante="secundario" onClick={abrirGuia}>
+              <BookOpen className="size-5" strokeWidth={2.5} aria-hidden />
+              Ver la guía otra vez
+            </Boton>
+          </Seccion>
           <Seccion titulo="App en tu celular" descripcion="Instala Diarco en tu pantalla de inicio: se abre a pantalla completa, sin tiendas de apps.">
             <InstalarApp />
           </Seccion>
