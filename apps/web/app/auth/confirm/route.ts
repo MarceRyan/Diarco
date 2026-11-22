@@ -11,10 +11,18 @@ import { crearClienteServidor } from "@/lib/supabase/servidor";
 /**
  * A dónde ir después de confirmar (?siguiente=/nueva-contrasena). Solo se aceptan
  * rutas internas: evita que el enlace sirva para redirigir a otro sitio.
+ * Se resuelve la URL y se compara el origen, porque el navegador ignora tabs y
+ * saltos de línea ("/\t/otro.com" acaba siendo "//otro.com").
  */
-function destinoSeguro(siguiente: string | null): string {
-  if (!siguiente || !siguiente.startsWith("/") || siguiente.startsWith("//") || siguiente.includes("\\")) return "/hoy";
-  return siguiente;
+function destinoSeguro(siguiente: string | null, base: URL): URL {
+  const porDefecto = new URL("/hoy", base);
+  if (!siguiente || !siguiente.startsWith("/") || /[\\\u0000-\u001f\u007f]/.test(siguiente)) return porDefecto;
+  try {
+    const destino = new URL(siguiente, base);
+    return destino.origin === base.origin ? destino : porDefecto;
+  } catch {
+    return porDefecto;
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -35,7 +43,7 @@ export async function GET(request: NextRequest) {
     confirmado = !error;
   }
 
-  if (confirmado) return NextResponse.redirect(new URL(destinoSeguro(searchParams.get("siguiente")), request.url));
+  if (confirmado) return NextResponse.redirect(destinoSeguro(searchParams.get("siguiente"), request.nextUrl));
 
   const url = new URL("/login", request.url);
   url.searchParams.set("error", "enlace");
