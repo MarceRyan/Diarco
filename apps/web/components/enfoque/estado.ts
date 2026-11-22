@@ -12,8 +12,11 @@ import { useSyncExternalStore } from "react";
 /** Lo que el usuario eligió: en qué, cuánto y con qué categoría. */
 export interface Plan {
   descripcion: string;
+  /** Duración elegida (en modo libre no se usa). */
   minutos: number;
   categoria_id: number | null;
+  /** Cronómetro libre: cuenta hacia arriba hasta que lo detengas. */
+  libre?: boolean;
 }
 
 interface Base {
@@ -53,6 +56,13 @@ export interface FinDescanso extends Base {
 export type EstadoEnfoque = EnCurso | FinEnfoque | FinDescanso;
 
 export const DURACIONES = [15, 25, 45, 60];
+/** Límites de la duración que se escribe a mano ("Otro"). */
+export const MINUTOS_MIN = 1;
+export const MINUTOS_MAX = 180;
+/** El cronómetro libre se cierra solo a las 4 h (por si olvidas detenerlo). */
+export const LIMITE_LIBRE = 240;
+/** En modo libre, la vela tarda esto en consumirse casi por completo. */
+export const MINUTOS_VELA_LIBRE = 90;
 export const DESCANSO_CORTO = 5;
 export const DESCANSO_LARGO = 15;
 /** Cada cuántas sesiones el descanso es largo. */
@@ -121,6 +131,29 @@ export function estadoActual(): EstadoEnfoque | null {
 /** ms que quedan de una fase en curso. */
 export function restante(e: EnCurso, ahora: number): number {
   return e.pausadoRestante ?? Math.max(0, e.fin - ahora);
+}
+
+/** ms transcurridos de una fase en curso. */
+export function transcurrido(e: EnCurso, ahora: number): number {
+  return e.minutos * 60_000 - restante(e, ahora);
+}
+
+/** La fase en curso es un cronómetro libre (cuenta hacia arriba). */
+export const esLibre = (e: EnCurso) => e.fase === "enfoque" && e.plan.libre === true;
+
+/** "MM:SS", o "H:MM:SS" desde la primera hora. */
+export function reloj(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mmss = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return h > 0 ? `${h}:${mmss}` : mmss;
+}
+
+/** Lo que muestra el reloj: cuenta regresiva, o lo transcurrido en modo libre. */
+export function tiempoVisible(e: EnCurso, ahora: number): string {
+  return esLibre(e) ? reloj(Math.floor(transcurrido(e, ahora) / 1000) * 1000) : reloj(restante(e, ahora));
 }
 
 // --- Preferencia de sonido ambiente -------------------------------------------

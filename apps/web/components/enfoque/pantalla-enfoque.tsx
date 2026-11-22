@@ -9,12 +9,17 @@ import { createPortal } from "react-dom";
 import { Chispa, type EstadoChispa } from "@/components/chispa";
 import { Confeti } from "@/components/confeti";
 import {
+  esLibre,
   estadoActual,
   guardarAmbiente,
   guardarEstado,
+  LIMITE_LIBRE,
   minutosDescanso,
+  MINUTOS_VELA_LIBRE,
   restante,
   SESIONES_POR_DESCANSO_LARGO,
+  tiempoVisible,
+  transcurrido,
   useAmbiente,
   useEstadoEnfoque,
   type Ambiente,
@@ -46,16 +51,11 @@ const FRASES = [
   "Ya falta menos.",
 ];
 
-const mmss = (ms: number) => {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-};
-
 // -----------------------------------------------------------------------------
 // Acciones (se llaman desde clics: ahí se activan audio, permisos y pantalla completa)
 // -----------------------------------------------------------------------------
 function nuevaFase(fase: "enfoque" | "descanso", plan: Plan, ciclo: number, fecha: Fecha, zona: string): EnCurso {
-  const minutos = fase === "enfoque" ? plan.minutos : minutosDescanso(ciclo);
+  const minutos = fase === "descanso" ? minutosDescanso(ciclo) : plan.libre ? LIMITE_LIBRE : plan.minutos;
   return {
     fase,
     plan,
@@ -142,7 +142,7 @@ export function EnfoqueGlobal() {
     } else {
       guardarEstado({ fase: "fin_descanso", plan: e.plan, ciclo: e.ciclo, minimizada: e.minimizada, terminoEn: Math.min(Date.now(), e.fin) });
       tocarCampana(false);
-      notificar("Descanso terminado", `¿Otra sesión de ${e.plan.minutos} min?`);
+      notificar("Descanso terminado", e.plan.libre ? "¿Otra sesión?" : `¿Otra sesión de ${e.plan.minutos} min?`);
     }
   }
 
@@ -169,7 +169,7 @@ export function EnfoqueGlobal() {
       return;
     }
     tituloOriginal.current ??= document.title;
-    document.title = `${enCurso.fase === "enfoque" ? "⏱" : "☕"} ${mmss(restante(enCurso, ahora))} · Diarco`;
+    document.title = `${enCurso.fase === "enfoque" ? "⏱" : "☕"} ${tiempoVisible(enCurso, ahora)} · Diarco`;
   }, [enCurso, ahora]);
 
   // Distracciones: salir de la pestaña durante el enfoque se cuenta y Chispa lo comenta al volver.
@@ -264,7 +264,7 @@ export function EnfoqueGlobal() {
 function Burbuja({ estado, ahora }: { estado: EstadoEnfoque; ahora: number }) {
   const texto =
     estado.fase === "enfoque" || estado.fase === "descanso"
-      ? `${estado.pausadoRestante !== null ? "⏸ " : ""}${mmss(restante(estado, ahora))}`
+      ? `${estado.pausadoRestante !== null ? "⏸ " : ""}${tiempoVisible(estado, ahora)}`
       : estado.fase === "fin_enfoque"
         ? "¡Terminó!"
         : "Descanso listo";
@@ -287,8 +287,8 @@ function Burbuja({ estado, ahora }: { estado: EstadoEnfoque; ahora: number }) {
 // -----------------------------------------------------------------------------
 const AMBIENTES: { valor: Ambiente; etiqueta: string; Icono: typeof Flame }[] = [
   { valor: "apagado", etiqueta: "Sin sonido", Icono: VolumeX },
-  { valor: "fogata", etiqueta: "Fogata", Icono: Flame },
-  { valor: "lluvia", etiqueta: "Lluvia", Icono: CloudRain },
+  { valor: "fogata", etiqueta: "Chimenea", Icono: Flame },
+  { valor: "lluvia", etiqueta: "Lluvia en la ventana", Icono: CloudRain },
 ];
 
 const claseIcono =
@@ -425,7 +425,7 @@ function PantallaCompleta({
             <Chispa estado="emocionada" tamano={140} />
             <p className="font-titulo text-4xl font-extrabold">¡Descanso terminado!</p>
             <p className="max-w-md text-lg text-white/80">
-              ¿Otra sesión de {estado.plan.minutos} min en «{estado.plan.descripcion}»?
+              ¿Otra sesión {estado.plan.libre ? "libre" : `de ${estado.plan.minutos} min`} en «{estado.plan.descripcion}»?
             </p>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <BotonClaro principal onClick={onOtra} autoFocus>
@@ -459,9 +459,12 @@ function EnCursoVista({
 }) {
   const total = estado.minutos * 60_000;
   const queda = restante(estado, ahora);
-  const avance = Math.min(1, Math.max(0, 1 - queda / total));
+  const hecho = transcurrido(estado, ahora);
+  const libre = esLibre(estado);
+  // En modo libre la vela se consume en MINUTOS_VELA_LIBRE y queda un cabito encendido.
+  const avance = libre ? Math.min(0.92, hecho / (MINUTOS_VELA_LIBRE * 60_000)) : Math.min(1, Math.max(0, 1 - queda / total));
   const pausada = estado.pausadoRestante !== null;
-  const minutosHechos = Math.floor((total - queda) / 60_000);
+  const minutosHechos = Math.floor(hecho / 60_000);
   const enfoque = estado.fase === "enfoque";
 
   // Frase: cambia cada 3 minutos; en el último minuto, ánimo final.
@@ -473,9 +476,9 @@ function EnCursoVista({
       ? "¿Te distrajiste? Volvamos a lo nuestro. 💪"
       : pausada
         ? "En pausa. Te espero."
-        : queda <= 60_000
+        : !libre && queda <= 60_000
           ? "¡Último minuto! 🔥"
-          : FRASES[Math.floor((total - queda) / 180_000) % FRASES.length];
+          : FRASES[Math.floor(hecho / 180_000) % FRASES.length];
   const gesto: EstadoChispa = distraccion ? "preocupada" : pausada ? "dormida" : enfoque ? "feliz" : "feliz";
 
   return (
@@ -494,21 +497,25 @@ function EnCursoVista({
       <div className="w-full max-w-md space-y-3">
         <p className="truncate text-lg font-bold text-white/80">{enfoque ? estado.plan.descripcion : "Estírate, toma agua, mira lejos."}</p>
         <p className="font-titulo text-7xl leading-none font-extrabold tabular-nums sm:text-8xl" role="timer" aria-live="off">
-          {mmss(queda)}
+          {tiempoVisible(estado, ahora)}
         </p>
-        <div
-          className="h-3 overflow-hidden rounded-full bg-white/15"
-          role="progressbar"
-          aria-valuenow={Math.round(avance * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Avance de la sesión"
-        >
+        {libre ? (
+          <p className="text-sm text-white/60">Cronómetro libre: cuando termines, pulsa «Terminar» y guardo lo que llevas.</p>
+        ) : (
           <div
-            className={`h-full rounded-full transition-[width] duration-300 ${enfoque ? "bg-[#ffb340]" : "bg-[#5fd3b8]"}`}
-            style={{ width: `${avance * 100}%` }}
-          />
-        </div>
+            className="h-3 overflow-hidden rounded-full bg-white/15"
+            role="progressbar"
+            aria-valuenow={Math.round(avance * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Avance de la sesión"
+          >
+            <div
+              className={`h-full rounded-full transition-[width] duration-300 ${enfoque ? "bg-[#ffb340]" : "bg-[#5fd3b8]"}`}
+              style={{ width: `${avance * 100}%` }}
+            />
+          </div>
+        )}
         {enfoque && estado.distracciones > 0 && (
           <p className="text-sm text-white/60">
             {estado.distracciones} {estado.distracciones === 1 ? "distracción" : "distracciones"} en esta sesión
@@ -574,25 +581,83 @@ function EnCursoVista({
   );
 }
 
-/** Chispa es la llama de una vela que se consume a medida que pasa el tiempo. */
+/**
+ * Chorreones de cera: bajan desde el borde y se alargan con el tiempo.
+ * x: posición desde la izquierda de la vela (72 px); los de los costados sobresalen.
+ */
+const CHORREONES = [
+  { x: -4, ancho: 10, base: 12, crece: 70 },
+  { x: 13, ancho: 7, base: 5, crece: 30 },
+  { x: 33, ancho: 9, base: 8, crece: 48 },
+  { x: 50, ancho: 6, base: 4, crece: 24 },
+  { x: 65, ancho: 11, base: 14, crece: 80 },
+];
+
+/** Chispa es la llama de una vela que se derrite a medida que pasa el tiempo. */
 function Vela({ avance, gesto, viva }: { avance: number; gesto: EstadoChispa; viva: boolean }) {
-  const alto = Math.round(26 + (1 - avance) * 150); // de 176 px a 26 px
+  const alto = Math.round(30 + (1 - avance) * 150); // de 180 px a 30 px
+  const charco = Math.round(80 + avance * 90); // el charco de la base crece
   return (
-    <div className="relative flex flex-col items-center" aria-hidden>
+    // Alto fijo: la vela baja sin mover el reloj de abajo.
+    <div className="relative flex h-[330px] flex-col items-center justify-end" aria-hidden>
       {/* Resplandor */}
-      <div className="absolute top-2 size-56 rounded-full bg-[#ffb340]/25 blur-3xl motion-safe:animate-pulse" />
-      <div className="relative z-10 -mb-3">
+      <div
+        className="absolute size-56 rounded-full bg-[#ffb340]/25 blur-3xl transition-[bottom] duration-1000 ease-linear motion-safe:animate-pulse"
+        style={{ bottom: alto - 40 }}
+      />
+
+      <div className="relative z-10 -mb-4">
         <Chispa estado={gesto} tamano={118} animada={viva} />
       </div>
-      {/* Cera con gotas */}
+
+      {/* Cuerpo de la vela */}
       <div
-        className="relative w-[72px] rounded-t-2xl bg-gradient-to-r from-[#f3d9a4] via-[#fff6e0] to-[#e8c98a] transition-[height] duration-1000 ease-linear"
+        className="relative w-[72px] rounded-t-[14px] bg-gradient-to-r from-[#eccf95] via-[#fff6e0] to-[#e2bf7d] transition-[height] duration-1000 ease-linear"
         style={{ height: alto }}
       >
-        <span className="absolute top-0 left-3 h-7 w-3 rounded-b-full bg-[#fff6e0]" />
-        <span className="absolute top-0 right-4 h-4 w-2.5 rounded-b-full bg-[#f6e3b8]" />
+        {/* Borde derretido con un charquito de cera alrededor de la llama */}
+        <span className="absolute -top-2 -right-1.5 -left-1.5 h-5 rounded-[50%] bg-[#fffdf6] shadow-[0_2px_0_rgb(176_124_52/0.3)]" />
+        <span className="absolute -top-1 right-3 left-3 h-2.5 rounded-[50%] bg-[#f6d48e] shadow-[inset_0_1px_3px_#c9933b]" />
+
+        {/* Chorreones que se alargan */}
+        {CHORREONES.map((c) => (
+          <span
+            key={c.x}
+            className="absolute top-0 rounded-b-full bg-gradient-to-b from-[#fffdf6] to-[#fbefd2] shadow-[2px_2px_0_rgb(176_124_52/0.35)] transition-[height] duration-1000 ease-linear"
+            style={{ left: c.x, width: c.ancho, height: Math.min(alto - 8, Math.round(c.base + c.crece * avance)) }}
+          >
+            {/* Gota gorda en la punta del chorreón */}
+            <span
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-[#fbefd2] shadow-[2px_2px_0_rgb(176_124_52/0.35)]"
+              style={{ width: c.ancho + 4, height: c.ancho + 5 }}
+            />
+          </span>
+        ))}
+
+        {/* Gotas que resbalan de vez en cuando */}
+        {viva && (
+          <>
+            <span
+              className="vela-gota absolute -left-[3px] top-3 h-3 w-2 rounded-full bg-[#fff3d6]"
+              style={{ "--caida": `${alto - 10}px`, "--dur": "4.5s", "--retraso": "1s" } as React.CSSProperties}
+            />
+            <span
+              className="vela-gota absolute -right-[3px] top-4 h-3.5 w-2 rounded-full bg-[#fff3d6]"
+              style={{ "--caida": `${alto - 10}px`, "--dur": "6s", "--retraso": "3.5s" } as React.CSSProperties}
+            />
+          </>
+        )}
       </div>
-      <div className="h-4 w-36 rounded-full bg-white/20" />
+
+      {/* Charco de cera en la base */}
+      <div className="relative -mt-2 flex justify-center">
+        <span
+          className="block h-4 rounded-[50%] bg-gradient-to-b from-[#fff3d6] to-[#e8cd94] transition-[width] duration-1000 ease-linear"
+          style={{ width: charco }}
+        />
+      </div>
+      {/* Platito */}
+      <div className="-mt-1.5 h-4 w-44 rounded-full bg-white/20" />
     </div>
   );
 }

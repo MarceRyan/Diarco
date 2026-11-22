@@ -4,7 +4,7 @@ import { useHoy, useZonaHoraria } from "@diarco/shared/hooks";
 import { Expand, Play, Plus, Timer } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { SelectorCategoria } from "@/components/categorias";
-import { DURACIONES, useEstadoEnfoque } from "@/components/enfoque/estado";
+import { DURACIONES, MINUTOS_MAX, MINUTOS_MIN, useEstadoEnfoque } from "@/components/enfoque/estado";
 import { abrirEnfoque, empezarEnfoque } from "@/components/enfoque/pantalla-enfoque";
 import { Boton } from "@/components/ui/boton";
 import { Campo } from "@/components/ui/campos";
@@ -20,19 +20,37 @@ export function Enfoque() {
   const estado = useEstadoEnfoque();
 
   const [descripcion, setDescripcion] = useState("");
-  const [minutos, setMinutos] = useState(25);
+  /** Duración elegida: un número de la lista, "otro" (escrito a mano) o "libre" (cronómetro). */
+  const [opcion, setOpcion] = useState<number | "otro" | "libre">(25);
+  const [otros, setOtros] = useState("30");
   const [categoria, setCategoria] = useState<number | null>(null);
   const [verCategoria, setVerCategoria] = useState(false);
   const [error, setError] = useState<string>();
+  const [errorMinutos, setErrorMinutos] = useState<string>();
 
   function empezar(evento: FormEvent) {
     evento.preventDefault();
     const texto = descripcion.trim();
     if (!texto) return setError("Escribe en qué te vas a enfocar.");
     setError(undefined);
-    empezarEnfoque({ descripcion: texto.slice(0, 500), minutos, categoria_id: categoria }, hoy, zona);
+    let minutos = typeof opcion === "number" ? opcion : 0;
+    if (opcion === "otro") {
+      minutos = Number(otros);
+      if (!Number.isInteger(minutos) || minutos < MINUTOS_MIN || minutos > MINUTOS_MAX) {
+        return setErrorMinutos(`Escribe un número entero de ${MINUTOS_MIN} a ${MINUTOS_MAX} minutos.`);
+      }
+    }
+    setErrorMinutos(undefined);
+    empezarEnfoque(
+      { descripcion: texto.slice(0, 500), minutos, categoria_id: categoria, libre: opcion === "libre" },
+      hoy,
+      zona,
+    );
     setDescripcion("");
   }
+
+  const claseOpcion =
+    "min-h-11 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta text-sm font-extrabold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-violeta aria-pressed:bg-violeta-suave aria-pressed:text-violeta-texto";
 
   const enCurso = estado && (estado.fase === "enfoque" || estado.fase === "descanso") ? estado : null;
 
@@ -75,21 +93,48 @@ export function Enfoque() {
           />
           <fieldset>
             <legend className="sr-only">¿Cuánto tiempo?</legend>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {DURACIONES.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  aria-pressed={minutos === m}
-                  aria-label={`${m} minutos`}
-                  onClick={() => setMinutos(m)}
-                  className="min-h-11 rounded-2xl border-2 border-b-4 border-borde bg-tarjeta text-sm font-extrabold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 aria-pressed:border-violeta aria-pressed:bg-violeta-suave aria-pressed:text-violeta-texto"
-                >
+                <button key={m} type="button" aria-pressed={opcion === m} aria-label={`${m} minutos`} onClick={() => setOpcion(m)} className={claseOpcion}>
                   {m} min
                 </button>
               ))}
+              <button type="button" aria-pressed={opcion === "otro"} onClick={() => setOpcion("otro")} className={claseOpcion}>
+                Otro
+              </button>
+              <button
+                type="button"
+                aria-pressed={opcion === "libre"}
+                aria-label="Libre: cronómetro sin límite que detienes tú"
+                onClick={() => setOpcion("libre")}
+                className={`${claseOpcion} inline-flex items-center justify-center gap-1`}
+              >
+                <Timer className="size-4" strokeWidth={2.5} aria-hidden />
+                Libre
+              </button>
             </div>
           </fieldset>
+          {opcion === "otro" && (
+            <Campo
+              etiqueta="Minutos"
+              type="number"
+              inputMode="numeric"
+              min={MINUTOS_MIN}
+              max={MINUTOS_MAX}
+              value={otros}
+              onChange={(e) => {
+                setOtros(e.target.value);
+                setErrorMinutos(undefined);
+              }}
+              error={errorMinutos}
+              ayuda={errorMinutos ? undefined : `De ${MINUTOS_MIN} a ${MINUTOS_MAX} minutos.`}
+            />
+          )}
+          {opcion === "libre" && (
+            <p className="rounded-2xl bg-superficie px-3 py-2 text-sm text-texto-suave">
+              El cronómetro cuenta hacia arriba hasta que pulses «Terminar». Se guarda lo que lleves.
+            </p>
+          )}
           {verCategoria ? (
             <SelectorCategoria valor={categoria} onCambiar={setCategoria} />
           ) : (

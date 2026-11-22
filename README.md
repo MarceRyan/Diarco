@@ -28,7 +28,7 @@ y celebra contigo cada día cumplido.
 | **Bitácora** | Lo que hiciste cada día, con hora, minutos y categoría. |
 | **Progreso** | Cumplimiento diario, por día de la semana y por hábito; tiempo por categoría y ánimo. |
 | **Logros** | 109 medallas en 6 grupos, con las que estás por ganar al frente. |
-| **Modo enfoque** | Pantalla completa con Chispa como una vela que se consume, frases de ánimo, sonido ambiente (fogata o lluvia), contador de distracciones, aviso al terminar y descansos automáticos. Cada sesión se anota en la bitácora. |
+| **Modo enfoque** | Pantalla completa con Chispa como la llama de una vela que se derrite, frases de ánimo, sonido ambiente (chimenea o lluvia en la ventana), contador de distracciones, aviso al terminar y descansos automáticos. Duración fija, escrita a mano o cronómetro libre. Cada sesión se anota en la bitácora. |
 | **Ánimo** | Cómo te sentiste y qué influyó; Chispa cruza tu ánimo con tus hábitos y descubre patrones. |
 
 Las rachas son amables: tu racha general suma con cumplir el 70 % de lo programado, y cada
