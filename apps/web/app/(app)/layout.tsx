@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { AvisoConfiguracion } from "@/components/aviso-configuracion";
 import { ContenedorPrincipal } from "@/components/contenedor-principal";
+import { EnfoqueGlobal } from "@/components/enfoque/pantalla-enfoque";
 import { Navegacion } from "@/components/navegacion";
 import { CargandoLista, Esqueleto } from "@/components/ui/estados";
 import { VigilanteLogros } from "@/components/vigilante-logros";
@@ -39,6 +40,7 @@ export default function LayoutApp({ children }: LayoutProps<"/">) {
             <EnPeticion>
               {children}
               <VigilanteLogros />
+              <EnfoqueGlobal />
             </EnPeticion>
           </Suspense>
         </ContenedorPrincipal>
