@@ -36,6 +36,7 @@ import {
   pedirPermisoNotificaciones,
   salirPantallaCompleta,
   tocarCampana,
+  tocarTic,
 } from "./navegador";
 
 /** Segundos que espera la celebración antes de empezar sola el descanso. */
@@ -210,6 +211,14 @@ export function EnfoqueGlobal() {
       document.removeEventListener("visibilitychange", alVolver);
     };
   }, [corriendo, clave]);
+
+  // Cuenta regresiva final: un tic por segundo en los últimos 5 (no en modo libre).
+  const segundosFinales =
+    enCurso && corriendo && !esLibre(enCurso) ? Math.ceil(restante(enCurso, ahora) / 1000) : null;
+  useEffect(() => {
+    if (segundosFinales === null || segundosFinales < 1 || segundosFinales > 5) return;
+    tocarTic(segundosFinales === 1);
+  }, [segundosFinales]);
 
   // Sonido ambiente mientras corre.
   useEffect(() => {
@@ -466,9 +475,13 @@ function EnCursoVista({
   const pausada = estado.pausadoRestante !== null;
   const minutosHechos = Math.floor(hecho / 60_000);
   const enfoque = estado.fase === "enfoque";
+  // Últimos 5 segundos: el reloj se pone rojo y late como una bomba.
+  const finalCerca = !libre && !pausada && queda > 0 && queda <= 5000;
 
   // Frase: cambia cada 3 minutos; en el último minuto, ánimo final.
-  const frase = !enfoque
+  const frase = finalCerca
+    ? `¡${Math.ceil(queda / 1000)}!`
+    : !enfoque
     ? Math.floor(ahora / 4000) % 2 === 0
       ? "Inhala…"
       : "Exhala…"
@@ -483,6 +496,9 @@ function EnCursoVista({
 
   return (
     <>
+      {/* Destello rojo en los bordes durante los últimos segundos */}
+      {finalCerca && <div className="fondo-alarma pointer-events-none absolute inset-0" aria-hidden />}
+
       {/* Bocadillo de Chispa */}
       <p
         key={frase}
@@ -496,7 +512,11 @@ function EnCursoVista({
 
       <div className="w-full max-w-md space-y-3">
         <p className="truncate text-lg font-bold text-white/80">{enfoque ? estado.plan.descripcion : "Estírate, toma agua, mira lejos."}</p>
-        <p className="font-titulo text-7xl leading-none font-extrabold tabular-nums sm:text-8xl" role="timer" aria-live="off">
+        <p
+          className={`font-titulo text-7xl leading-none font-extrabold tabular-nums transition-colors sm:text-8xl ${finalCerca ? "reloj-bomba" : ""}`}
+          role="timer"
+          aria-live="off"
+        >
           {tiempoVisible(estado, ahora)}
         </p>
         {libre ? (
@@ -511,7 +531,7 @@ function EnCursoVista({
             aria-label="Avance de la sesión"
           >
             <div
-              className={`h-full rounded-full transition-[width] duration-300 ${enfoque ? "bg-[#ffb340]" : "bg-[#5fd3b8]"}`}
+              className={`h-full rounded-full transition-[width] duration-300 ${finalCerca ? "bg-[#ff4d5e]" : enfoque ? "bg-[#ffb340]" : "bg-[#5fd3b8]"}`}
               style={{ width: `${avance * 100}%` }}
             />
           </div>

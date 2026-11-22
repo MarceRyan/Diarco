@@ -10,6 +10,8 @@ const nunito = Nunito({ variable: "--font-nunito", subsets: ["latin"], weight: [
 
 export const metadata: Metadata = {
   title: { default: "Diarco", template: "%s · Diarco" },
+  applicationName: "Diarco",
+  appleWebApp: { title: "Diarco", capable: true, statusBarStyle: "default" },
   description: "Tus hábitos, tu horario y tu día, con rachas que se celebran.",
 };
 

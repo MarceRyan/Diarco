@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 0 108 108">
+  <defs>
+    <radialGradient id="cuerpo" cx="0.46" cy="0.74" r="0.78">
+      <stop offset="0" stop-color="#ffc23d"/>
+      <stop offset="0.42" stop-color="#ff6a2b"/>
+      <stop offset="1" stop-color="#da511f"/>
+    </radialGradient>
+    <radialGradient id="nucleo" cx="0.5" cy="0.62" r="0.6">
+      <stop offset="0" stop-color="#fff6cf" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ffc23d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="brillo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ojo" cx="0.42" cy="0.36" r="0.7">
+      <stop offset="0.55" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9d4ea"/>
+    </radialGradient>
+  </defs>
+  <path d="M50 4 C61 20 86 36 86 68 C86 90 70 104 50 104 C30 104 14 90 14 68 C14 51 23 41 30 31 C32 43 37 49 43 51 C39 33 42 18 50 4 Z" fill="url(#cuerpo)"/>
+  <ellipse cx="50" cy="80" rx="30" ry="24" fill="url(#nucleo)"/>
+  <ellipse cx="33" cy="50" rx="7" ry="11" fill="url(#brillo)" transform="rotate(-25 33 50)"/>
+  <ellipse cx="29" cy="82" rx="5.5" ry="3.4" fill="#ff7d9c" opacity="0.75"/>
+  <ellipse cx="71" cy="82" rx="5.5" ry="3.4" fill="#ff7d9c" opacity="0.75"/>
+  <circle cx="39" cy="70" r="8" fill="url(#ojo)"/>
+  <circle cx="39" cy="70.5" r="5.2" fill="#5a3a1e"/>
+  <circle cx="39" cy="70.5" r="3.1" fill="#0b0814"/>
+  <circle cx="41" cy="68.2" r="1.9" fill="#fff"/>
+  <circle cx="61" cy="70" r="8" fill="url(#ojo)"/>
+  <circle cx="61" cy="70.5" r="5.2" fill="#5a3a1e"/>
+  <circle cx="61" cy="70.5" r="3.1" fill="#0b0814"/>
+  <circle cx="63" cy="68.2" r="1.9" fill="#fff"/>
+  <path d="M44 84 Q50 90 56 84" fill="none" stroke="#241c3d" stroke-width="3.2" stroke-linecap="round"/>
+</svg>

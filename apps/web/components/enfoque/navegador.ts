@@ -41,6 +41,22 @@ export function tocarCampana(alegre = true) {
   });
 }
 
+/** Tic corto de cuenta regresiva (el último, más agudo). */
+export function tocarTic(ultimo = false) {
+  if (!contexto) return;
+  const t = contexto.currentTime;
+  const osc = contexto.createOscillator();
+  const volumen = contexto.createGain();
+  osc.type = "triangle";
+  osc.frequency.value = ultimo ? 1320 : 880;
+  volumen.gain.setValueAtTime(0, t);
+  volumen.gain.linearRampToValueAtTime(0.18, t + 0.005);
+  volumen.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+  osc.connect(volumen).connect(contexto.destination);
+  osc.start(t);
+  osc.stop(t + 0.15);
+}
+
 /** Ruido en bucle: marrón (grave, para el fuego) o rosa (más parejo, para la lluvia). */
 function bufferRuido(ctx: AudioContext, tipo: "marron" | "rosa", segundos = 4): AudioBuffer {
   const buffer = ctx.createBuffer(1, ctx.sampleRate * segundos, ctx.sampleRate);
@@ -181,7 +197,7 @@ export function notificar(titulo: string, cuerpo: string) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     // Si la pestaña está a la vista no hace falta: ya se ve la celebración.
     if (document.visibilityState === "visible") return;
-    new Notification(titulo, { body: cuerpo, icon: "/favicon.ico", tag: "diarco-enfoque" });
+    new Notification(titulo, { body: cuerpo, icon: "/chispa-192.png", tag: "diarco-enfoque" });
   } catch {
     // En algunos móviles solo se puede notificar con service worker: se omite.
   }
