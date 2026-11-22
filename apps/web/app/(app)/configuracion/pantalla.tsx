@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { useCerrarSesion } from "@/components/navegacion";
+import { InstalarApp } from "@/components/pwa";
 import { Boton } from "@/components/ui/boton";
 import { Campo, Selector } from "@/components/ui/campos";
 import { CargandoLista, claseTarjeta, Encabezado, MensajeError } from "@/components/ui/estados";
@@ -29,6 +30,9 @@ export function PantallaConfiguracion() {
           )}
         </div>
         <div className="min-w-0 space-y-6">
+          <Seccion titulo="App en tu celular" descripcion="Instala Diarco en tu pantalla de inicio: se abre a pantalla completa, sin tiendas de apps.">
+            <InstalarApp />
+          </Seccion>
           <Apariencia />
           <Cuenta />
         </div>

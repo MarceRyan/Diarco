@@ -55,6 +55,15 @@ hábito tiene protectores semanales para que un tropiezo no borre semanas de esf
 
 > Las capturas usan el usuario demo del `seed.sql`.
 
+## Instalar en el celular
+
+Diarco es una **app web instalable (PWA)**: no hace falta ninguna tienda de apps.
+
+- **Android (Chrome):** abre [diarco.vercel.app](https://diarco.vercel.app) y toca **Instalar Diarco** (también en Ajustes → App en tu celular).
+- **iPhone (Safari):** abre la web, toca **Compartir** y elige **Agregar a inicio**.
+
+Se abre a pantalla completa con el ícono de Chispa, se actualiza sola con cada despliegue y, sin conexión, muestra un aviso en lugar de un error.
+
 ## Arquitectura
 
 ```mermaid

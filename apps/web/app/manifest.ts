@@ -3,11 +3,14 @@ import type { MetadataRoute } from "next";
 /** Nombre e ícono de Diarco al agregarla a la pantalla de inicio del celular. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "Diarco",
     short_name: "Diarco",
     description: "Tus hábitos, tu horario y tu día, con rachas que se celebran.",
     start_url: "/hoy",
+    scope: "/",
     display: "standalone",
+    categories: ["productivity", "lifestyle"],
     background_color: "#f6f4fd",
     theme_color: "#ff6a2b",
     lang: "es",

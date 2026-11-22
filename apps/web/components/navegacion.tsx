@@ -69,7 +69,7 @@ export function Navegacion() {
       </aside>
 
       {/* Móvil: cabecera */}
-      <header className="sticky top-0 z-10 flex min-h-14 items-center border-b-2 border-borde bg-fondo/90 px-4 backdrop-blur-md md:hidden">
+      <header className="sticky top-0 z-10 flex min-h-14 items-center border-b-2 border-borde bg-fondo/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-md md:hidden">
         <Link href="/hoy" aria-label="Diarco, ir a Hoy">
           <Logo />
         </Link>

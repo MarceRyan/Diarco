@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import Script from "next/script";
+import { RegistrarPWA } from "@/components/pwa";
 import { SCRIPT_TEMA } from "@/lib/tema";
 import "./globals.css";
 
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Instalada en iPhone, ocupa toda la pantalla; las barras respetan la muesca con env(safe-area-inset-*).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f6f4fd" },
     { media: "(prefers-color-scheme: dark)", color: "#15121d" },
@@ -33,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {SCRIPT_TEMA}
         </Script>
         {children}
+        <RegistrarPWA />
       </body>
     </html>
   );
