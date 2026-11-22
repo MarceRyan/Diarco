@@ -24,7 +24,13 @@ import type {
   Fecha,
   HabitoActualizar,
   HabitoNuevo,
+  Pendiente,
+  PendienteActualizar,
+  PendienteNuevo,
   PerfilActualizar,
+  RutinaActualizar,
+  RutinaHecha,
+  RutinaNueva,
 } from "../types";
 import { claves, useObtenerCliente } from "./contexto";
 
@@ -390,6 +396,128 @@ export function useAnimo(fecha: Fecha) {
 export function useGuardarAnimo() {
   const cliente = useObtenerCliente();
   return useMutacion((animo: EstadoAnimoNuevo) => api.guardarAnimo(cliente(), animo), [claves.animo]);
+}
+
+// -----------------------------------------------------------------------------
+// Rutina (sin hora ni racha). Sus mutaciones no tocan rachas ni logros.
+// -----------------------------------------------------------------------------
+export function useRutinas() {
+  const cliente = useObtenerCliente();
+  return useQuery({ queryKey: claves.rutinas, queryFn: () => api.listarRutinas(cliente()) });
+}
+
+/** Mutación simple que solo invalida las claves indicadas (sin recalcular logros). */
+function useMutacionSimple<V, R>(fn: (variables: V) => Promise<R>, invalidar: QueryKey[]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSettled: () => Promise.all(invalidar.map((queryKey) => qc.invalidateQueries({ queryKey }))),
+  });
+}
+
+export function useCrearRutina() {
+  const cliente = useObtenerCliente();
+  return useMutacionSimple((rutina: RutinaNueva) => api.crearRutina(cliente(), rutina), [claves.rutinas]);
+}
+
+export function useActualizarRutina() {
+  const cliente = useObtenerCliente();
+  return useMutacionSimple(
+    ({ id, cambios }: { id: number; cambios: RutinaActualizar }) => api.actualizarRutina(cliente(), id, cambios),
+    [claves.rutinas],
+  );
+}
+
+export function useEliminarRutina() {
+  const cliente = useObtenerCliente();
+  return useMutacionSimple((id: number) => api.eliminarRutina(cliente(), id), [claves.rutinas, claves.rutinaHechas]);
+}
+
+/** Ids de las tareas de la rutina hechas en una fecha. */
+export function useRutinaHechas(fecha: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.rutinaHechasDia(fecha),
+    queryFn: () => api.listarRutinaHechas(cliente(), fecha),
+    select: (filas) => new Set(filas.map((f) => f.rutina_id)),
+  });
+}
+
+/** Marca o desmarca una tarea de la rutina, con actualización optimista. */
+export function useMarcarRutina() {
+  const cliente = useObtenerCliente();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rutinaId, fecha, hecha }: { rutinaId: number; fecha: Fecha; hecha: boolean }) =>
+      api.marcarRutina(cliente(), rutinaId, fecha, hecha),
+    onMutate: async ({ rutinaId, fecha, hecha }) => {
+      const clave = claves.rutinaHechasDia(fecha);
+      await qc.cancelQueries({ queryKey: clave });
+      const anterior = qc.getQueryData<RutinaHecha[]>(clave);
+      qc.setQueryData<RutinaHecha[]>(clave, (lista = []) => {
+        const sin = lista.filter((f) => f.rutina_id !== rutinaId);
+        return hecha ? [...sin, { rutina_id: rutinaId, fecha }] : sin;
+      });
+      return { anterior, clave };
+    },
+    onError: (_e, _v, contexto) => {
+      if (contexto) qc.setQueryData(contexto.clave, contexto.anterior);
+    },
+    onSettled: (_d, _e, { fecha }) => qc.invalidateQueries({ queryKey: claves.rutinaHechasDia(fecha) }),
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Pendientes (una sola vez, con fecha opcional)
+// -----------------------------------------------------------------------------
+
+/** Días hacia atrás que se muestran de los pendientes ya hechos. */
+export const DIAS_PENDIENTES_HECHOS = 14;
+
+/** Pendientes sin hacer y los hechos de las últimas dos semanas. */
+export function usePendientes() {
+  const cliente = useObtenerCliente();
+  const hoy = useHoy();
+  const desde = sumarDias(hoy, -DIAS_PENDIENTES_HECHOS);
+  return useQuery({
+    queryKey: [...claves.pendientes, desde],
+    queryFn: () => api.listarPendientes(cliente(), desde),
+  });
+}
+
+export function useCrearPendiente() {
+  const cliente = useObtenerCliente();
+  return useMutacionSimple((pendiente: PendienteNuevo) => api.crearPendiente(cliente(), pendiente), [claves.pendientes]);
+}
+
+export function useEliminarPendiente() {
+  const cliente = useObtenerCliente();
+  return useMutacionSimple((id: number) => api.eliminarPendiente(cliente(), id), [claves.pendientes]);
+}
+
+/**
+ * Edita un pendiente (también marcarlo hecho: `{ hecho_en: hoy }`, o deshacerlo:
+ * `{ hecho_en: null }`). Actualización optimista para que el check sea instantáneo.
+ */
+export function useActualizarPendiente() {
+  const cliente = useObtenerCliente();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, cambios }: { id: number; cambios: PendienteActualizar }) =>
+      api.actualizarPendiente(cliente(), id, cambios),
+    onMutate: async ({ id, cambios }) => {
+      await qc.cancelQueries({ queryKey: claves.pendientes });
+      const anteriores = qc.getQueriesData<Pendiente[]>({ queryKey: claves.pendientes });
+      qc.setQueriesData<Pendiente[]>({ queryKey: claves.pendientes }, (lista) =>
+        lista?.map((p) => (p.id === id ? { ...p, ...cambios } : p)),
+      );
+      return { anteriores };
+    },
+    onError: (_e, _v, contexto) => {
+      contexto?.anteriores.forEach(([queryKey, datos]) => qc.setQueryData(queryKey, datos));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: claves.pendientes }),
+  });
 }
 
 // -----------------------------------------------------------------------------

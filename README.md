@@ -22,6 +22,8 @@ y celebra contigo cada día cumplido.
 |---|---|
 | **Hoy** | Racha general, progreso del día, hábitos para marcar, agenda, ánimo y modo enfoque. |
 | **Hábitos** | Hábitos con días de la semana, meta, ícono y color. Racha y mejor marca por hábito. |
+| **Rutina** | Tareas de cada día sin hora ni racha (tender la cama, lavar los platos): se marcan en Hoy sin presión. |
+| **Pendientes** | Tareas y eventos de una sola vez, con o sin fecha y hora. Lo atrasado sigue apareciendo en Hoy. |
 | **Horario** | Semana tipo con bloques por categoría, vista semana o día y "ahora mismo". |
 | **Bitácora** | Lo que hiciste cada día, con hora, minutos y categoría. |
 | **Progreso** | Cumplimiento diario, por día de la semana y por hábito; tiempo por categoría y ánimo. |
@@ -91,6 +93,9 @@ erDiagram
   perfiles ||--o{ bloques_horario : planifica
   perfiles ||--o{ estados_animo : siente
   perfiles ||--o{ usuario_logros : gana
+  perfiles ||--o{ rutinas : mantiene
+  perfiles ||--o{ pendientes : anota
+  rutinas ||--o{ rutina_registros : "se hace en"
   habitos ||--o{ habito_registros : "se cumple en"
   categorias |o--o{ actividades : clasifica
   categorias |o--o{ bloques_horario : clasifica
@@ -130,6 +135,17 @@ erDiagram
     date fecha
     smallint nivel
     text_arr etiquetas
+  }
+  rutinas {
+    text nombre
+    smallint_arr dias_semana
+    boolean activo
+  }
+  pendientes {
+    text titulo
+    date fecha
+    time hora
+    date hecho_en
   }
   logros {
     text codigo
@@ -174,7 +190,7 @@ docs/capturas/    imágenes de este README
 
 ## Calidad
 
-- **101 pruebas unitarias** (Vitest) para rachas, estadísticas, logros, fechas y ánimo.
+- **110 pruebas unitarias** (Vitest) para rachas, estadísticas, logros, fechas, ánimo, rutina y pendientes.
 - **Pruebas de punta a punta** (Playwright) que recorren todas las pantallas con el usuario demo.
 - **Verificación de la base sin Docker** (`pnpm db:verificar`): aplica migraciones y seed en PGlite
   y comprueba RLS, restricciones y funciones SQL.

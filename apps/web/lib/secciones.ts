@@ -8,6 +8,7 @@ import {
   CalendarClock,
   ChartColumn,
   Flame,
+  ListTodo,
   NotebookPen,
   Settings,
   Sprout,
@@ -32,6 +33,7 @@ export const PRINCIPALES: Seccion[] = [
 ];
 
 export const SECUNDARIOS: Seccion[] = [
+  { href: "/pendientes", etiqueta: "Pendientes", descripcion: "Tareas y eventos de una sola vez", Icono: ListTodo, color: "cielo" },
   { href: "/estadisticas", etiqueta: "Progreso", descripcion: "Cómo vas, en gráficos", Icono: ChartColumn, color: "violeta" },
   { href: "/logros", etiqueta: "Logros", descripcion: "Las medallas que ganaste", Icono: Award, color: "amarillo" },
   { href: "/configuracion", etiqueta: "Ajustes", descripcion: "Perfil, rachas y apariencia", Icono: Settings, color: "neutro" },

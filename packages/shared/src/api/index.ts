@@ -14,8 +14,11 @@ import {
   habitoRegistroSchema,
   habitoSchema,
   logroSchema,
+  pendienteSchema,
   perfilSchema,
   resumenDiaSchema,
+  rutinaHechaSchema,
+  rutinaSchema,
   usuarioLogroSchema,
 } from "../schemas";
 import type {
@@ -26,7 +29,11 @@ import type {
   Fecha,
   HabitoActualizar,
   HabitoNuevo,
+  PendienteActualizar,
+  PendienteNuevo,
   PerfilActualizar,
+  RutinaActualizar,
+  RutinaNueva,
 } from "../types";
 import { comprobar, obtenerTodo, validar, type ClienteDiarco } from "./base";
 
@@ -290,6 +297,82 @@ export async function guardarAnimo(cliente: ClienteDiarco, animo: EstadoAnimoNue
       .single(),
     estadoAnimoSchema,
   );
+}
+
+// -----------------------------------------------------------------------------
+// Rutina (sin hora ni racha)
+// -----------------------------------------------------------------------------
+export async function listarRutinas(cliente: ClienteDiarco) {
+  return validar(
+    await cliente.from("rutinas").select("*").order("activo", { ascending: false }).order("creado_en"),
+    z.array(rutinaSchema),
+  );
+}
+
+export async function crearRutina(cliente: ClienteDiarco, rutina: RutinaNueva) {
+  return validar(await cliente.from("rutinas").insert(rutina).select("*").single(), rutinaSchema);
+}
+
+export async function actualizarRutina(cliente: ClienteDiarco, id: number, cambios: RutinaActualizar) {
+  return validar(await cliente.from("rutinas").update(cambios).eq("id", id).select("*").single(), rutinaSchema);
+}
+
+export async function eliminarRutina(cliente: ClienteDiarco, id: number) {
+  comprobar(await cliente.from("rutinas").delete().eq("id", id));
+}
+
+/** Tareas de la rutina hechas en una fecha. */
+export async function listarRutinaHechas(cliente: ClienteDiarco, fecha: Fecha) {
+  return validar(
+    await cliente.from("rutina_registros").select("rutina_id, fecha").eq("fecha", fecha),
+    z.array(rutinaHechaSchema),
+  );
+}
+
+/** Marca o desmarca una tarea de la rutina en una fecha (desmarcar borra el registro). */
+export async function marcarRutina(cliente: ClienteDiarco, rutinaId: number, fecha: Fecha, hecha: boolean) {
+  if (hecha) {
+    comprobar(
+      await cliente
+        .from("rutina_registros")
+        .upsert({ rutina_id: rutinaId, fecha }, { onConflict: "rutina_id,fecha", ignoreDuplicates: true }),
+    );
+  } else {
+    comprobar(await cliente.from("rutina_registros").delete().eq("rutina_id", rutinaId).eq("fecha", fecha));
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Pendientes (una sola vez, con fecha opcional)
+// -----------------------------------------------------------------------------
+
+/** Todos los pendientes sin hacer, más los hechos desde `hechosDesde`. */
+export async function listarPendientes(cliente: ClienteDiarco, hechosDesde: Fecha) {
+  return validar(
+    await cliente
+      .from("pendientes")
+      .select("*")
+      .or(`hecho_en.is.null,hecho_en.gte.${hechosDesde}`)
+      .order("fecha", { ascending: true, nullsFirst: false })
+      .order("hora", { ascending: true, nullsFirst: true })
+      .order("creado_en"),
+    z.array(pendienteSchema),
+  );
+}
+
+export async function crearPendiente(cliente: ClienteDiarco, pendiente: PendienteNuevo) {
+  return validar(await cliente.from("pendientes").insert(pendiente).select("*").single(), pendienteSchema);
+}
+
+export async function actualizarPendiente(cliente: ClienteDiarco, id: number, cambios: PendienteActualizar) {
+  return validar(
+    await cliente.from("pendientes").update(cambios).eq("id", id).select("*").single(),
+    pendienteSchema,
+  );
+}
+
+export async function eliminarPendiente(cliente: ClienteDiarco, id: number) {
+  comprobar(await cliente.from("pendientes").delete().eq("id", id));
 }
 
 // -----------------------------------------------------------------------------

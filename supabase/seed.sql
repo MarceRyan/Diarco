@@ -150,5 +150,29 @@ begin
   from public.logros l
   join (values ('primer_paso', 45), ('racha_3', 42), ('racha_7', 12)) as x (codigo, hace_dias)
     on x.codigo = l.codigo;
+
+  -- Rutina (sin hora ni racha) -----------------------------------------------
+  insert into public.rutinas (usuario_id, nombre, icono, dias_semana) values
+    (demo, 'Tender la cama',      '🛏️', '{0,1,2,3,4,5,6}'),
+    (demo, 'Lavar los platos',    '🍽️', '{0,1,2,3,4,5,6}'),
+    (demo, 'Sacar la basura',     '🗑️', '{1,3,5}'),
+    (demo, 'Regar las plantas',   '🪴', '{2,6}');
+
+  -- Hoy ya tendió la cama; ayer hizo toda la rutina que le tocaba.
+  insert into public.rutina_registros (usuario_id, rutina_id, fecha)
+  select demo, r.id, hoy from public.rutinas r where r.usuario_id = demo and r.nombre = 'Tender la cama';
+  insert into public.rutina_registros (usuario_id, rutina_id, fecha)
+  select demo, r.id, hoy - 1 from public.rutinas r
+  where r.usuario_id = demo and extract(dow from hoy - 1)::smallint = any (r.dias_semana);
+
+  -- Pendientes: uno atrasado, de hoy, eventos próximos, sin fecha y uno hecho.
+  insert into public.pendientes (usuario_id, titulo, fecha, hora, nota, hecho_en) values
+    (demo, 'Pagar el recibo de luz',      hoy - 2, null,    'Vence este mes', null),
+    (demo, 'Comprar pan',                 hoy,     null,    null,             null),
+    (demo, 'Llamar a mamá',               hoy,     '20:00', null,             null),
+    (demo, 'Cita con el dentista',        hoy + 1, '10:30', 'Llevar la orden', null),
+    (demo, 'Cumpleaños de Ana',           hoy + 5, null,    'Comprar regalo', null),
+    (demo, 'Renovar el pasaporte',        null,    null,    null,             null),
+    (demo, 'Devolver el libro prestado',  hoy - 3, null,    null,             hoy - 1);
 end;
 $$;

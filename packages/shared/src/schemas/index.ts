@@ -219,6 +219,67 @@ export const estadoAnimoNuevoSchema = z.object({
 });
 
 // -----------------------------------------------------------------------------
+// rutinas (se repiten sin hora y sin racha)
+// -----------------------------------------------------------------------------
+export const rutinaSchema = z.object({
+  id: idSchema,
+  usuario_id: uuidSchema,
+  nombre: z.string(),
+  icono: z.string(),
+  dias_semana: diasSemanaSchema,
+  activo: z.boolean(),
+  creado_en: instanteSchema,
+});
+
+export const rutinaNuevaSchema = z.object({
+  nombre: textoObligatorio(60, "El nombre"),
+  icono: z.string().trim().min(1, { error: "Elige un ícono" }).max(16).default("🧹"),
+  dias_semana: diasSemanaSchema.default([0, 1, 2, 3, 4, 5, 6]),
+  activo: z.boolean().default(true),
+});
+
+export const rutinaActualizarSchema = rutinaNuevaSchema.partial();
+
+/** Fila mínima de rutina_registros: qué tarea se hizo y cuándo. */
+export const rutinaHechaSchema = z.object({
+  rutina_id: idSchema,
+  fecha: fechaSchema,
+});
+
+// -----------------------------------------------------------------------------
+// pendientes (una sola vez, con fecha opcional)
+// -----------------------------------------------------------------------------
+export const pendienteSchema = z.object({
+  id: idSchema,
+  usuario_id: uuidSchema,
+  titulo: z.string(),
+  fecha: fechaSchema.nullable(),
+  hora: horaSchema.nullable(),
+  nota: z.string().nullable(),
+  hecho_en: fechaSchema.nullable(),
+  creado_en: instanteSchema,
+});
+
+const pendienteCampos = z.object({
+  titulo: textoObligatorio(120, "El título"),
+  fecha: fechaSchema.nullish().transform((v) => v ?? null),
+  hora: horaSchema.nullish().transform((v) => v ?? null),
+  nota: textoOpcional(280, "La nota"),
+});
+
+const horaConFecha = {
+  error: "Para poner una hora, elige también la fecha",
+  path: ["hora"],
+};
+
+export const pendienteNuevoSchema = pendienteCampos.refine((p) => p.hora === null || p.fecha !== null, horaConFecha);
+
+export const pendienteActualizarSchema = pendienteCampos
+  .extend({ hecho_en: fechaSchema.nullable() })
+  .partial()
+  .refine((p) => !p.hora || p.fecha !== null, horaConFecha);
+
+// -----------------------------------------------------------------------------
 // logros
 // -----------------------------------------------------------------------------
 export const logroSchema = z.object({

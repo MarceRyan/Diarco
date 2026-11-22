@@ -110,7 +110,9 @@ await comoUsuario(DEMO, async () => {
   const r = await uno("select (select count(*) from public.habitos)::int h, (select count(*) from public.perfiles)::int p, (select count(*) from public.logros)::int l");
   r.h === 5 && r.p === 1 && r.l === 109 ? ok(`demo ve sus 5 hábitos, solo su perfil y el catálogo de 109 logros`) : mal(`demo ve ${JSON.stringify(r)}`);
   const t = await uno("select * from public.totales_logros()");
-  t.completados === 98 && t.actividades === 22 && t.habitos_creados === 5 && t.habitos_activos === 4 && t.bloques === 5 && t.notas === 1
+  // El seed depende del día de la semana: se compara con el conteo real, no con un número fijo.
+  const esperado = (await uno("select count(*)::int n from public.habito_registros where completado")).n;
+  t.completados === esperado && t.completados > 0 && t.actividades === 22 && t.habitos_creados === 5 && t.habitos_activos === 4 && t.bloques === 5 && t.notas === 1
     ? ok(`totales_logros cuenta la historia del demo: ${JSON.stringify(t)}`)
     : mal(`totales_logros: ${JSON.stringify(t)}`);
 });
@@ -149,6 +151,34 @@ await comoUsuario(OTRO, async () => {
   const t = await uno("select * from public.totales_logros()");
   t.completados === 0 && t.actividades === 0 ? ok("otro usuario no cuenta datos del demo en totales_logros") : mal(`otro ve totales ${JSON.stringify(t)}`);
 });
+
+// --- Rutina y pendientes ---------------------------------------------------------
+console.log("Rutina y pendientes:");
+await comoUsuario(DEMO, async () => {
+  const r = await uno(`select (select count(*) from public.rutinas)::int rutinas,
+    (select count(*) from public.pendientes)::int pendientes,
+    (select count(*) from public.rutina_registros)::int registros`);
+  r.rutinas === 4 && r.pendientes === 7 && r.registros > 0
+    ? ok(`demo ve su rutina (4), sus pendientes (7) y lo que marcó (${r.registros})`)
+    : mal(`rutina/pendientes del demo: ${JSON.stringify(r)}`);
+});
+await comoUsuario(OTRO, async () => {
+  const r = await uno(`select (select count(*) from public.rutinas)::int r,
+    (select count(*) from public.rutina_registros)::int rr,
+    (select count(*) from public.pendientes)::int p`);
+  r.r === 0 && r.rr === 0 && r.p === 0 ? ok("otro usuario no ve la rutina ni los pendientes del demo") : mal(`otro ve ${JSON.stringify(r)}`);
+  const upd = await db.query("update public.pendientes set titulo = 'hackeado'");
+  upd.affectedRows === 0 ? ok("otro usuario no puede editar pendientes del demo (0 filas)") : mal("otro editó pendientes del demo");
+});
+const rutinaDemo = (await uno(`select id from public.rutinas where usuario_id = $1 order by id limit 1`, [DEMO])).id;
+await debeFallar("otro no puede marcar una tarea de la rutina del demo (FK compuesta)", OTRO,
+  `insert into public.rutina_registros (rutina_id, fecha) values ($1, current_date + 400)`, [rutinaDemo], /foreign key/);
+await debeFallar("anon no puede leer pendientes", null, `select * from public.pendientes`, [], /permission denied/);
+await debeFallar("pendiente con hora pero sin fecha", DEMO,
+  `insert into public.pendientes (titulo, hora) values ('Cita', '10:00')`, [], /check/);
+await debeFallar("tarea de rutina repetida el mismo día", DEMO,
+  `insert into public.rutina_registros (rutina_id, fecha) values ($1, current_date), ($1, current_date)`, [rutinaDemo], /duplicate key/);
+await debeFallar("rutina sin días", DEMO, `insert into public.rutinas (nombre, dias_semana) values ('x', '{}')`, [], /check/);
 
 // --- Restricciones -------------------------------------------------------------
 console.log("Restricciones:");

@@ -27,6 +27,8 @@ import { Bienvenida } from "@/components/bienvenida";
 import { Animo } from "@/components/hoy/animo";
 import { AnotarRapido } from "@/components/hoy/anotar-rapido";
 import { Enfoque } from "@/components/hoy/enfoque";
+import { PendientesHoy } from "@/components/hoy/pendientes-hoy";
+import { RutinaHoy } from "@/components/hoy/rutina-hoy";
 import { SemanaRacha } from "@/components/hoy/semana-racha";
 import { ChipCategoria } from "@/components/categorias";
 import { Chispa, estadoChispa, type EstadoChispa } from "@/components/chispa";
@@ -69,16 +71,18 @@ export function PantallaHoy() {
       <Encabezado titulo={nombre ? `¡Hola, ${nombre}!` : "¡Hola!"} subtitulo={fechaLarga(hoy)} />
       {/*
         Escritorio: a la izquierda tu día (racha y semana, hábitos, agenda y anotar);
-        a la derecha dos herramientas compactas (ánimo y enfoque) que acompañan al hacer scroll.
+        a la derecha herramientas compactas (pendientes, ánimo y enfoque) que acompañan al hacer scroll.
       */}
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0 space-y-8">
           <TarjetaRacha />
           <AvisoAyer />
           <HabitosDeHoy onCelebrar={setCelebracion} />
+          <RutinaHoy />
           <TuDia />
         </div>
         <div className="min-w-0 space-y-6 xl:sticky xl:top-10">
+          <PendientesHoy />
           <Animo />
           <Enfoque />
         </div>

@@ -11,6 +11,7 @@ import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { CargandoLista, claseTarjeta, Encabezado, EstadoVacio, MensajeError } from "@/components/ui/estados";
 import { FormularioHabito } from "./formulario-habito";
+import { SeccionRutina } from "./seccion-rutina";
 
 type Edicion = { modo: "nuevo" } | { modo: "editar"; habito: Habito } | null;
 
@@ -82,6 +83,10 @@ export function PantallaHabitos() {
           )}
         </div>
       )}
+
+      <div className="mt-10">
+        <SeccionRutina />
+      </div>
 
       <Dialogo
         abierto={edicion !== null}

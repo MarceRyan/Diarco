@@ -19,9 +19,16 @@ import type {
   habitoRegistroSchema,
   habitoSchema,
   logroSchema,
+  pendienteActualizarSchema,
+  pendienteNuevoSchema,
+  pendienteSchema,
   perfilActualizarSchema,
   perfilSchema,
   resumenDiaSchema,
+  rutinaActualizarSchema,
+  rutinaHechaSchema,
+  rutinaNuevaSchema,
+  rutinaSchema,
   usuarioLogroSchema,
 } from "../schemas";
 
@@ -41,6 +48,9 @@ export type BloqueHorario = z.infer<typeof bloqueHorarioSchema>;
 export type EstadoAnimo = z.infer<typeof estadoAnimoSchema>;
 export type Logro = z.infer<typeof logroSchema>;
 export type UsuarioLogro = z.infer<typeof usuarioLogroSchema>;
+export type Rutina = z.infer<typeof rutinaSchema>;
+export type RutinaHecha = z.infer<typeof rutinaHechaSchema>;
+export type Pendiente = z.infer<typeof pendienteSchema>;
 
 // Respuestas de funciones RPC
 export type CumplimientoHabito = z.infer<typeof cumplimientoHabitoSchema>;
@@ -55,3 +65,7 @@ export type HabitoRegistroNuevo = z.infer<typeof habitoRegistroNuevoSchema>;
 export type ActividadNueva = z.infer<typeof actividadNuevaSchema>;
 export type BloqueHorarioNuevo = z.infer<typeof bloqueHorarioNuevoSchema>;
 export type EstadoAnimoNuevo = z.infer<typeof estadoAnimoNuevoSchema>;
+export type RutinaNueva = z.infer<typeof rutinaNuevaSchema>;
+export type RutinaActualizar = z.infer<typeof rutinaActualizarSchema>;
+export type PendienteNuevo = z.infer<typeof pendienteNuevoSchema>;
+export type PendienteActualizar = z.infer<typeof pendienteActualizarSchema>;

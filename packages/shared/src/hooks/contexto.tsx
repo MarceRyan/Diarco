@@ -55,4 +55,8 @@ export const claves = {
   bloques: ["bloques"] as const,
   animo: ["animo"] as const,
   animoDia: (fecha: Fecha) => ["animo", fecha] as const,
+  rutinas: ["rutinas"] as const,
+  rutinaHechas: ["rutina_registros"] as const,
+  rutinaHechasDia: (fecha: Fecha) => ["rutina_registros", fecha] as const,
+  pendientes: ["pendientes"] as const,
 };
