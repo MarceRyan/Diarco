@@ -4,6 +4,7 @@ import {
   calcularRachaHabito,
   construirResumenDiario,
   cumpleUmbral,
+  diasDeRachaAcumulados,
   hitoAlcanzado,
   rachaTrasCumplirHoy,
   rangoFechas,
@@ -229,6 +230,23 @@ describe("cumpleUmbral", () => {
     expect(cumpleUmbral({ programados: 3, completados: 2 })).toBe(false); // 66,7 %
     expect(cumpleUmbral({ programados: 4, completados: 3 })).toBe(true); // 75 %
     expect(cumpleUmbral({ programados: 0, completados: 0 })).toBe(false);
+  });
+});
+
+describe("diasDeRachaAcumulados", () => {
+  it("cuenta los días que sumaron, aunque no sean seguidos", () => {
+    const historia = [
+      { programados: 4, completados: 4 }, // suma
+      { programados: 4, completados: 1 }, // no
+      { programados: 0, completados: 0 }, // día libre: no
+      { programados: 3, completados: 3 }, // suma
+      { programados: 10, completados: 7 }, // 70 %: suma
+    ];
+    expect(diasDeRachaAcumulados(historia)).toBe(3);
+  });
+
+  it("sin historia es cero", () => {
+    expect(diasDeRachaAcumulados([])).toBe(0);
   });
 });
 

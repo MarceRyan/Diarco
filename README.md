@@ -27,6 +27,7 @@ y celebra contigo cada día cumplido.
 | **Horario** | Semana tipo con bloques por categoría, vista semana o día y "ahora mismo". |
 | **Bitácora** | Lo que hiciste cada día, con hora, minutos y categoría. |
 | **Progreso** | Cumplimiento diario, por día de la semana y por hábito; tiempo por categoría y ánimo. |
+| **Mi Chispa** | La mascota crece en 14 fases con tus días de racha acumulados (de chispa a sol), cada una con su movimiento y sus frases. Se desliza para ver las demás y celebra cuando evoluciona. |
 | **Logros** | 109 medallas en 6 grupos, con las que estás por ganar al frente. |
 | **Modo enfoque** | Pantalla completa con Chispa como la llama de una vela que se derrite, frases de ánimo, sonido ambiente (chimenea o lluvia en la ventana), contador de distracciones, aviso al terminar y descansos automáticos. Duración fija, escrita a mano o cronómetro libre. Cada sesión se anota en la bitácora. |
 | **Ánimo** | Cómo te sentiste y qué influyó; Chispa cruza tu ánimo con tus hábitos y descubre patrones. |

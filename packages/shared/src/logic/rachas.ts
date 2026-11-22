@@ -188,6 +188,14 @@ export function cumpleUmbral(
   return dia.completados * 100 >= Math.round(umbral * 100) * dia.programados;
 }
 
+/**
+ * Días de racha acumulados: cuántos días de la historia sumaron a la racha
+ * general (≥ 70 %), seguidos o no. Es lo que hace crecer a Chispa: nunca baja.
+ */
+export function diasDeRachaAcumulados(dias: readonly Pick<DiaResumen, "programados" | "completados">[], umbral = UMBRAL_RACHA_GENERAL): number {
+  return dias.reduce((total, dia) => total + (cumpleUmbral(dia, umbral) ? 1 : 0), 0);
+}
+
 /** Calcula la racha general (días seguidos con ≥ 70 % de hábitos cumplidos). */
 export function calcularRachaGeneral(entrada: EntradaRachaGeneral): RachaGeneral {
   const { hoy } = entrada;

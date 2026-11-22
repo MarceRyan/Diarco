@@ -11,6 +11,7 @@ import {
   ListTodo,
   NotebookPen,
   Settings,
+  Sparkles,
   Sprout,
   type LucideIcon,
 } from "lucide-react";
@@ -33,6 +34,7 @@ export const PRINCIPALES: Seccion[] = [
 ];
 
 export const SECUNDARIOS: Seccion[] = [
+  { href: "/chispa", etiqueta: "Mi Chispa", descripcion: "Mira cómo crece con tu racha", Icono: Sparkles, color: "mandarina" },
   { href: "/pendientes", etiqueta: "Pendientes", descripcion: "Tareas y eventos de una sola vez", Icono: ListTodo, color: "cielo" },
   { href: "/estadisticas", etiqueta: "Progreso", descripcion: "Cómo vas, en gráficos", Icono: ChartColumn, color: "violeta" },
   { href: "/logros", etiqueta: "Logros", descripcion: "Las medallas que ganaste", Icono: Award, color: "amarillo" },

@@ -314,6 +314,121 @@
   animation: gota-cera var(--dur, 4.5s) cubic-bezier(0.5, 0, 0.9, 0.6) var(--retraso, 0s) infinite;
 }
 
+/* Carrusel deslizable sin barra de desplazamiento visible. */
+.sin-barra {
+  scrollbar-width: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fases de Chispa: rayos del sol que giran, bracito que saluda, brasas, estrellas y calor. */
+@keyframes fase-girar {
+  to { transform: rotate(360deg); }
+}
+.fase-girar {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: fase-girar 40s linear infinite;
+}
+@keyframes fase-saludo {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-18deg); }
+  80% { transform: rotate(8deg); }
+  90% { transform: rotate(-14deg); }
+}
+.fase-saludo {
+  animation: fase-saludo 3.5s ease-in-out infinite;
+}
+@keyframes fase-brasa {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.fase-brasa {
+  animation: fase-brasa 2.2s ease-in-out infinite;
+}
+@keyframes fase-titilar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.fase-titilar {
+  animation: fase-titilar 2.6s ease-in-out infinite;
+}
+/* Movimiento propio de cada fase (el origen de giro se pasa en style.transformOrigin). */
+@keyframes fase-chocar {
+  0%, 35%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(var(--giro, 8deg)); }
+}
+.fase-chocar { animation: fase-chocar 1.6s ease-in-out infinite; }
+@keyframes fase-salto {
+  0%, 12%, 60%, 100% { transform: translateY(0) scale(1, 1); }
+  18% { transform: translateY(0) scale(1.1, 0.9); }
+  32% { transform: translateY(-14px) scale(0.95, 1.06); }
+  48% { transform: translateY(0) scale(1.06, 0.94); }
+}
+.fase-salto { animation: fase-salto 1.6s ease-in-out infinite; }
+@keyframes fase-pendulo {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+.fase-pendulo { animation: fase-pendulo 3.2s ease-in-out infinite; }
+@keyframes fase-antorcha {
+  0%, 100% { transform: rotate(-7deg); }
+  25% { transform: rotate(4deg) translateY(-3px); }
+  50% { transform: rotate(8deg); }
+  75% { transform: rotate(-2deg) translateY(-3px); }
+}
+.fase-antorcha { animation: fase-antorcha 2.6s ease-in-out infinite; }
+@keyframes fase-bamboleo {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+.fase-bamboleo { animation: fase-bamboleo 2.8s ease-in-out infinite; }
+@keyframes fase-baile {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(-7deg); }
+  50% { transform: translateY(0) rotate(0deg) scale(1.04, 0.96); }
+  75% { transform: translateY(-8px) rotate(7deg); }
+}
+.fase-baile { animation: fase-baile 1.4s ease-in-out infinite; }
+@keyframes fase-barrido {
+  0%, 100% { transform: rotate(-9deg); opacity: 0.6; }
+  50% { transform: rotate(9deg); opacity: 1; }
+}
+.fase-barrido { animation: fase-barrido 4s ease-in-out infinite; }
+@keyframes fase-victoria {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-12px) scale(1.04); }
+  55% { transform: translateY(0) scale(1.06, 0.95); }
+}
+.fase-victoria { animation: fase-victoria 1.3s ease-in-out infinite; }
+@keyframes fase-martillo {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-35deg); }
+  82% { transform: rotate(48deg); }
+  90% { transform: rotate(40deg); }
+}
+.fase-martillo { animation: fase-martillo 1.5s ease-in infinite; }
+@keyframes fase-golpe {
+  0%, 80%, 100% { opacity: 0; transform: scale(0.4); }
+  84% { opacity: 1; transform: scale(1.2); }
+  95% { opacity: 0; transform: scale(1.6); }
+}
+.fase-golpe { transform-box: fill-box; transform-origin: center; animation: fase-golpe 1.5s ease-out infinite; }
+@keyframes fase-respirar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+.fase-respirar { animation: fase-respirar 3.4s ease-in-out infinite; }
+@keyframes fase-calor {
+  0% { transform: translateY(0); opacity: 0; }
+  30% { opacity: 0.8; }
+  100% { transform: translateY(-14px); opacity: 0; }
+}
+.fase-calor {
+  animation: fase-calor 2.4s ease-out infinite;
+}
+
 /* Últimos 5 segundos: el reloj late como un corazón (doble golpe por segundo) y los bordes destellan. */
 @keyframes latido-bomba {
   0%, 100% { transform: scale(1); }

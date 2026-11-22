@@ -25,6 +25,7 @@ const SECCIONES = [
   { ruta: "/horario", titulo: "Tu semana" },
   { ruta: "/bitacora", titulo: "Tu bitácora" },
   { ruta: "/pendientes", titulo: "Pendientes" },
+  { ruta: "/chispa", titulo: "Mi Chispa" },
   { ruta: "/estadisticas", titulo: "Tu progreso" },
   { ruta: "/logros", titulo: "Tus logros" },
   { ruta: "/configuracion", titulo: "Ajustes" },
