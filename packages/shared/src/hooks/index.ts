@@ -443,7 +443,28 @@ export function useRutinaHechas(fecha: Fecha) {
   });
 }
 
-/** Marca o desmarca una tarea de la rutina, con actualización optimista. */
+/** Por tarea de la rutina, las fechas en que se hizo dentro del rango. */
+export function useRutinaHechasRango(desde: Fecha, hasta: Fecha) {
+  const cliente = useObtenerCliente();
+  return useQuery({
+    queryKey: claves.rutinaHechasRango(desde, hasta),
+    queryFn: () => api.listarRutinaHechasRango(cliente(), desde, hasta),
+    select: (filas) => {
+      const porRutina = new Map<number, Set<Fecha>>();
+      for (const f of filas) {
+        const fechas = porRutina.get(f.rutina_id);
+        if (fechas) fechas.add(f.fecha);
+        else porRutina.set(f.rutina_id, new Set([f.fecha]));
+      }
+      return porRutina;
+    },
+  });
+}
+
+/**
+ * Marca o desmarca una tarea de la rutina, con actualización optimista en todas
+ * las vistas a la vez: el día (Hoy, Bitácora) y los rangos (historial de 7 días).
+ */
 export function useMarcarRutina() {
   const cliente = useObtenerCliente();
   const qc = useQueryClient();
@@ -451,19 +472,26 @@ export function useMarcarRutina() {
     mutationFn: ({ rutinaId, fecha, hecha }: { rutinaId: number; fecha: Fecha; hecha: boolean }) =>
       api.marcarRutina(cliente(), rutinaId, fecha, hecha),
     onMutate: async ({ rutinaId, fecha, hecha }) => {
-      const clave = claves.rutinaHechasDia(fecha);
-      await qc.cancelQueries({ queryKey: clave });
-      const anterior = qc.getQueryData<RutinaHecha[]>(clave);
-      qc.setQueryData<RutinaHecha[]>(clave, (lista = []) => {
-        const sin = lista.filter((f) => f.rutina_id !== rutinaId);
+      // Solo las listas que incluyen esa fecha: la del día o los rangos que la contienen.
+      const filtro = {
+        queryKey: claves.rutinaHechas,
+        predicate: (q: { queryKey: readonly unknown[] }) => {
+          const k = q.queryKey;
+          return k[1] === "rango" ? String(k[2]) <= fecha && fecha <= String(k[3]) : k[1] === fecha;
+        },
+      };
+      await qc.cancelQueries(filtro);
+      const anteriores = qc.getQueriesData<RutinaHecha[]>(filtro);
+      qc.setQueriesData<RutinaHecha[]>(filtro, (lista = []) => {
+        const sin = lista.filter((f) => !(f.rutina_id === rutinaId && f.fecha === fecha));
         return hecha ? [...sin, { rutina_id: rutinaId, fecha }] : sin;
       });
-      return { anterior, clave };
+      return { anteriores };
     },
     onError: (_e, _v, contexto) => {
-      if (contexto) qc.setQueryData(contexto.clave, contexto.anterior);
+      contexto?.anteriores.forEach(([queryKey, datos]) => qc.setQueryData(queryKey, datos));
     },
-    onSettled: (_d, _e, { fecha }) => qc.invalidateQueries({ queryKey: claves.rutinaHechasDia(fecha) }),
+    onSettled: () => qc.invalidateQueries({ queryKey: claves.rutinaHechas }),
   });
 }
 

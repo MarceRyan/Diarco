@@ -329,6 +329,14 @@ export async function listarRutinaHechas(cliente: ClienteDiarco, fecha: Fecha) {
   );
 }
 
+/** Tareas de la rutina hechas en un rango de fechas (para el historial). */
+export async function listarRutinaHechasRango(cliente: ClienteDiarco, desde: Fecha, hasta: Fecha) {
+  return validar(
+    await cliente.from("rutina_registros").select("rutina_id, fecha").gte("fecha", desde).lte("fecha", hasta).order("fecha"),
+    z.array(rutinaHechaSchema),
+  );
+}
+
 /** Marca o desmarca una tarea de la rutina en una fecha (desmarcar borra el registro). */
 export async function marcarRutina(cliente: ClienteDiarco, rutinaId: number, fecha: Fecha, hecha: boolean) {
   if (hecha) {

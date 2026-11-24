@@ -1,7 +1,17 @@
 "use client";
 
-import { compararFechas, esFechaValida, minutosPorCategoria, sumarDias, type Actividad } from "@diarco/shared";
-import { useActividades, useCategorias, useHabitos, useHoy, useNotasDia } from "@diarco/shared/hooks";
+import { compararFechas, esFechaValida, fechaEnZona, minutosPorCategoria, rutinaTocaba, sumarDias, type Actividad } from "@diarco/shared";
+import {
+  useActividades,
+  useCategorias,
+  useHabitos,
+  useHoy,
+  useMarcarRutina,
+  useNotasDia,
+  useRutinaHechas,
+  useRutinas,
+  useZonaHoraria,
+} from "@diarco/shared/hooks";
 import { CalendarDays, Check, ChevronLeft, ChevronRight, NotebookPen, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -14,6 +24,59 @@ import { cuandoFue, duracion, fechaLarga, horaCorta } from "@/lib/formato";
 import { FormularioActividad } from "./formulario-actividad";
 
 type Edicion = { actividad?: Actividad } | null;
+
+/** La rutina de ese día: qué tareas hiciste y cuáles no (tocables para corregir). */
+function RutinaDelDia({ fecha, hoy }: { fecha: string; hoy: string }) {
+  const zona = useZonaHoraria();
+  const { data: rutinas = [] } = useRutinas();
+  const { data: hechas } = useRutinaHechas(fecha);
+  const marcar = useMarcarRutina();
+  if (!hechas) return null;
+  const futuro = compararFechas(fecha, hoy) > 0;
+  // Las que tocaban ese día, más las que hiciste aunque no tocaran.
+  const delDia = rutinas.filter(
+    (r) => hechas.has(r.id) || (r.activo && rutinaTocaba(r, fecha, fechaEnZona(new Date(r.creado_en), zona))),
+  );
+  if (delDia.length === 0) return null;
+  const cuantas = delDia.filter((r) => hechas.has(r.id)).length;
+
+  return (
+    <section aria-labelledby="titulo-rutina-dia" className={`${claseTarjeta} p-4`}>
+      <h2 id="titulo-rutina-dia" className="mb-3 flex items-center justify-between gap-2 font-titulo text-xl font-bold">
+        Rutina
+        <span className="text-sm font-extrabold text-texto-suave tabular-nums">
+          {cuantas} de {delDia.length}
+        </span>
+      </h2>
+      <ul className="flex flex-wrap gap-2">
+        {delDia.map((r) => {
+          const hecha = hechas.has(r.id);
+          return (
+            <li key={r.id}>
+              <button
+                type="button"
+                disabled={futuro}
+                aria-pressed={hecha}
+                onClick={() => marcar.mutate({ rutinaId: r.id, fecha, hecha: !hecha })}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-b-4 px-3 font-bold transition-transform duration-100 active:translate-y-[2px] active:border-b-2 disabled:opacity-60 ${
+                  hecha ? "border-verde/50 bg-verde-suave text-verde-texto" : "border-borde-fuerte bg-tarjeta text-texto-suave"
+                }`}
+              >
+                <span aria-hidden>{r.icono}</span>
+                {r.nombre}
+                {hecha && <Check className="size-4" strokeWidth={3.5} aria-hidden />}
+                <span className="sr-only">{hecha ? ": hecha. Toca para desmarcar." : ": sin marcar. Toca si la hiciste."}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {cuantas < delDia.length && !futuro && fecha !== hoy && (
+        <p className="mt-2 text-sm text-texto-suave">¿Hiciste alguna y olvidaste marcarla? Tócala.</p>
+      )}
+    </section>
+  );
+}
 
 /** Hábitos cumplidos ese día, con su nota de "qué hiciste" (editable desde aquí). */
 function HabitosDelDia({ fecha, hoy }: { fecha: string; hoy: string }) {
@@ -181,6 +244,7 @@ export function PantallaBitacora() {
           )}
 
           <HabitosDelDia fecha={fecha} hoy={hoy} />
+          <RutinaDelDia fecha={fecha} hoy={hoy} />
         </aside>
       </div>
 

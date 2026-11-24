@@ -5,6 +5,7 @@ import {
   pendienteActualizarSchema,
   pendienteNuevoSchema,
   rutinasDelDia,
+  rutinaTocaba,
   type Pendiente,
   type Rutina,
 } from "../src";
@@ -92,6 +93,18 @@ describe("rutinasDelDia", () => {
   it("solo las activas programadas para ese día de la semana", () => {
     const lista = [r("cama", [0, 1, 2, 3, 4, 5, 6]), r("basura", [1, 3]), r("plantas", [4]), r("pausada", [4], false)];
     expect(rutinasDelDia(lista, HOY).map((x) => x.nombre)).toEqual(["cama", "plantas"]);
+  });
+});
+
+describe("rutinaTocaba", () => {
+  const basura = r("basura", [1, 3, 5]); // lun, mié, vie
+  it("solo los días programados", () => {
+    expect(rutinaTocaba(basura, "2026-11-18", "2026-11-01")).toBe(true); // miércoles
+    expect(rutinaTocaba(basura, "2026-11-19", "2026-11-01")).toBe(false); // jueves
+  });
+  it("no antes de crearla", () => {
+    expect(rutinaTocaba(basura, "2026-11-16", "2026-11-17")).toBe(false);
+    expect(rutinaTocaba(basura, "2026-11-18", "2026-11-18")).toBe(true);
   });
 });
 

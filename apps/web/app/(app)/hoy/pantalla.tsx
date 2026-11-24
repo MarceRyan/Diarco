@@ -55,12 +55,17 @@ export function PantallaHoy() {
   const [celebracion, setCelebracion] = useState<Celebracion | null>(null);
 
   // Sin hábitos: Chispa da la bienvenida y ayuda a crear los primeros.
+  // La rutina y los pendientes se siguen viendo (no dependen de los hábitos).
   if (habitos.data && habitos.data.length === 0) {
     return (
       <>
         <Encabezado titulo={nombre ? `¡Hola, ${nombre}!` : "¡Hola!"} subtitulo={fechaLarga(hoy)} />
-        <div className="max-w-5xl">
+        <div className="max-w-5xl space-y-8">
           <Bienvenida nombre={nombre} />
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <RutinaHoy />
+            <PendientesHoy />
+          </div>
         </div>
       </>
     );

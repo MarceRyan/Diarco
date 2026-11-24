@@ -58,5 +58,6 @@ export const claves = {
   rutinas: ["rutinas"] as const,
   rutinaHechas: ["rutina_registros"] as const,
   rutinaHechasDia: (fecha: Fecha) => ["rutina_registros", fecha] as const,
+  rutinaHechasRango: (desde: Fecha, hasta: Fecha) => ["rutina_registros", "rango", desde, hasta] as const,
   pendientes: ["pendientes"] as const,
 };

@@ -14,6 +14,14 @@ export function rutinasDelDia(rutinas: readonly Rutina[], fecha: Fecha): Rutina[
   return rutinas.filter((r) => r.activo && r.dias_semana.includes(dia));
 }
 
+/**
+ * ¿La tarea tocaba ese día? Programada ese día de la semana y ya existía
+ * (`creadaEl`: fecha de creación en la zona del usuario).
+ */
+export function rutinaTocaba(rutina: Pick<Rutina, "dias_semana">, fecha: Fecha, creadaEl: Fecha): boolean {
+  return rutina.dias_semana.includes(diaSemana(fecha)) && compararFechas(fecha, creadaEl) >= 0;
+}
+
 export interface GruposPendientes {
   /** Sin hacer y con fecha anterior a hoy (el más antiguo primero). */
   atrasados: Pendiente[];

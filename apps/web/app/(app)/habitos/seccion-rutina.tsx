@@ -8,6 +8,7 @@ import { Boton } from "@/components/ui/boton";
 import { Dialogo } from "@/components/ui/dialogo";
 import { CargandoLista, claseTarjeta, MensajeError } from "@/components/ui/estados";
 import { describirDias } from "@/lib/formato";
+import { TiraRutina } from "@/components/tira-rutina";
 import { FormularioRutina } from "./formulario-rutina";
 
 type Edicion = { modo: "nuevo" } | { modo: "editar"; rutina: Rutina } | null;
@@ -48,19 +49,23 @@ export function SeccionRutina() {
           <span>Agrega tu primera tarea, como «Tender la cama». Aparecerá en Hoy los días que elijas.</span>
         </button>
       ) : (
-        <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {rutinas.data.map((r) => (
-            <li key={r.id} className={`${claseTarjeta} flex items-center gap-3 py-2 pr-2 pl-4 ${r.activo ? "" : "opacity-70"}`}>
-              <span className="text-2xl" aria-hidden>
-                {r.icono}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-bold">{r.nombre}</span>
-                <span className="block truncate text-sm text-texto-suave">{r.activo ? describirDias(r.dias_semana) : "En pausa"}</span>
-              </span>
-              <Boton variante="fantasma" icono aria-label={`Editar ${r.nombre}`} onClick={() => setEdicion({ modo: "editar", rutina: r })}>
-                <Pencil className="size-5" strokeWidth={2.5} aria-hidden />
-              </Boton>
+            <li key={r.id} className={`${claseTarjeta} space-y-3 p-4 ${r.activo ? "" : "opacity-70"}`}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl" aria-hidden>
+                  {r.icono}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-bold">{r.nombre}</span>
+                  <span className="block truncate text-sm text-texto-suave">{r.activo ? describirDias(r.dias_semana) : "En pausa"}</span>
+                </span>
+                <Boton variante="fantasma" icono aria-label={`Editar ${r.nombre}`} onClick={() => setEdicion({ modo: "editar", rutina: r })}>
+                  <Pencil className="size-5" strokeWidth={2.5} aria-hidden />
+                </Boton>
+              </div>
+              {/* Historial: últimos 7 días, tocables para corregir olvidos */}
+              {r.activo && <TiraRutina rutina={r} />}
             </li>
           ))}
         </ul>
