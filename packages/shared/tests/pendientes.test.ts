@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   agruparPendientes,
   diasDeAtraso,
+  diasDeRutina,
   pendienteActualizarSchema,
   pendienteNuevoSchema,
   rutinasDelDia,
@@ -105,6 +106,39 @@ describe("rutinaTocaba", () => {
   it("no antes de crearla", () => {
     expect(rutinaTocaba(basura, "2026-11-16", "2026-11-17")).toBe(false);
     expect(rutinaTocaba(basura, "2026-11-18", "2026-11-18")).toBe(true);
+  });
+});
+
+describe("diasDeRutina", () => {
+  it("cuenta días hechos y días que tocaban en el periodo", () => {
+    // 16 (lun) al 22 (dom) de noviembre.
+    const { porRutina, diasConRutina } = diasDeRutina({
+      rutinas: [
+        { id: 1, dias_semana: [0, 1, 2, 3, 4, 5, 6], creadaEl: "2026-11-01" }, // cama: todos los días
+        { id: 2, dias_semana: [1, 3, 5], creadaEl: "2026-11-18" }, // basura: lun/mié/vie, creada el miércoles
+      ],
+      hechas: new Map([
+        [1, new Set(["2026-11-16", "2026-11-17", "2026-11-20"])],
+        [2, new Set(["2026-11-20", "2026-11-30"])], // el 30 está fuera del periodo
+      ]),
+      desde: "2026-11-16",
+      hasta: "2026-11-22",
+    });
+    expect(porRutina).toEqual([
+      { id: 1, hechos: 3, tocaban: 7 },
+      { id: 2, hechos: 1, tocaban: 2 }, // tocaba mié 18 y vie 20 (el lunes aún no existía)
+    ]);
+    expect(diasConRutina).toBe(3); // 16, 17 y 20
+  });
+
+  it("un día hecho que no tocaba también cuenta como posible (nunca más hechos que posibles)", () => {
+    const { porRutina } = diasDeRutina({
+      rutinas: [{ id: 1, dias_semana: [1], creadaEl: "2026-11-20" }], // solo lunes, creada el viernes 20
+      hechas: new Map([[1, new Set(["2026-11-19", "2026-11-23"])]]), // jueves 19 (antes de crearla) y lunes 23
+      desde: "2026-11-16",
+      hasta: "2026-11-23",
+    });
+    expect(porRutina).toEqual([{ id: 1, hechos: 2, tocaban: 2 }]);
   });
 });
 

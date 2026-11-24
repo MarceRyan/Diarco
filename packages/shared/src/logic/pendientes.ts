@@ -18,8 +18,50 @@ export function rutinasDelDia(rutinas: readonly Rutina[], fecha: Fecha): Rutina[
  * ¿La tarea tocaba ese día? Programada ese día de la semana y ya existía
  * (`creadaEl`: fecha de creación en la zona del usuario).
  */
-export function rutinaTocaba(rutina: Pick<Rutina, "dias_semana">, fecha: Fecha, creadaEl: Fecha): boolean {
+export function rutinaTocaba(rutina: { dias_semana: readonly number[] }, fecha: Fecha, creadaEl: Fecha): boolean {
   return rutina.dias_semana.includes(diaSemana(fecha)) && compararFechas(fecha, creadaEl) >= 0;
+}
+
+export interface DiasDeRutina {
+  id: number;
+  /** Días del periodo en que se hizo. */
+  hechos: number;
+  /** Días del periodo en que tocaba (programada y ya creada). */
+  tocaban: number;
+}
+
+/**
+ * Cuántos días se hizo cada tarea de la rutina en un periodo y cuántos tocaba.
+ * También cuenta los días en que hiciste al menos una tarea.
+ */
+export function diasDeRutina(entrada: {
+  rutinas: readonly { id: number; dias_semana: readonly number[]; creadaEl: Fecha }[];
+  hechas: ReadonlyMap<number, ReadonlySet<Fecha>>;
+  desde: Fecha;
+  hasta: Fecha;
+}): { porRutina: DiasDeRutina[]; diasConRutina: number } {
+  const { rutinas, hechas, desde, hasta } = entrada;
+  const fechas: Fecha[] = [];
+  for (let f = desde; compararFechas(f, hasta) <= 0; f = sumarDias(f, 1)) fechas.push(f);
+
+  const conAlguna = new Set<Fecha>();
+  const porRutina = rutinas.map((r) => {
+    const delaRutina = hechas.get(r.id);
+    let hechos = 0;
+    let tocaban = 0;
+    for (const f of fechas) {
+      const hecha = delaRutina?.has(f) ?? false;
+      // Un día en que la hiciste cuenta aunque no tocara (por ejemplo, si cambiaste sus días):
+      // así nunca hay más días hechos que días posibles.
+      if (hecha || rutinaTocaba(r, f, r.creadaEl)) tocaban++;
+      if (hecha) {
+        hechos++;
+        conAlguna.add(f);
+      }
+    }
+    return { id: r.id, hechos, tocaban };
+  });
+  return { porRutina, diasConRutina: conAlguna.size };
 }
 
 export interface GruposPendientes {

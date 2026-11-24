@@ -3,6 +3,8 @@
 import {
   cumplimientoPorDiaSemana,
   cumplimientoPorHabito,
+  diasDeRutina,
+  fechaEnZona,
   minutosPorCategoria,
   nivelIntensidad,
   promedioAnimo,
@@ -20,6 +22,9 @@ import {
   useRachas,
   useRango,
   useResumenRango,
+  useRutinaHechasRango,
+  useRutinas,
+  useZonaHoraria,
 } from "@diarco/shared/hooks";
 import { ChartColumn, Clock, Flame, Smile, Target } from "lucide-react";
 import Link from "next/link";
@@ -211,6 +216,8 @@ function Contenido({ dias }: { dias: number }) {
             />
           )}
         </TarjetaGrafico>
+
+        <ProgresoRutina desde={desde} hasta={hasta} dias={dias} />
       </div>
 
       <DescubrimientosAnimo />
@@ -248,6 +255,65 @@ function Contenido({ dias }: { dias: number }) {
         <MapaAnual />
       </div>
     </>
+  );
+}
+
+/** Tu rutina en el periodo: cuántos días hiciste cada tarea (sin racha ni porcentajes que presionen). */
+function ProgresoRutina({ desde, hasta, dias }: { desde: string; hasta: string; dias: number }) {
+  const zona = useZonaHoraria();
+  const rutinas = useRutinas();
+  const hechas = useRutinaHechasRango(desde, hasta);
+
+  if (rutinas.isPending || hechas.isPending) return <Esqueleto className="h-64" />;
+  if (rutinas.error || hechas.error) return <MensajeError error={rutinas.error ?? hechas.error} />;
+
+  const { porRutina, diasConRutina } = diasDeRutina({
+    rutinas: rutinas.data.map((r) => ({ id: r.id, dias_semana: r.dias_semana, creadaEl: fechaEnZona(new Date(r.creado_en), zona) })),
+    hechas: hechas.data,
+    desde,
+    hasta,
+  });
+  const nombre = (id: number) => rutinas.data.find((r) => r.id === id);
+  // Las pausadas solo aparecen si las hiciste en el periodo.
+  const filas = porRutina
+    .filter((f) => f.hechos > 0 || nombre(f.id)?.activo)
+    .sort((a, b) => b.hechos - a.hechos);
+  const textoDias = (f: (typeof filas)[number]) => `${f.hechos} ${f.hechos === 1 ? "día" : "días"}${f.tocaban > 0 ? ` de ${f.tocaban}` : ""}`;
+
+  return (
+    <TarjetaGrafico
+      titulo="Tu rutina"
+      descripcion={`Cuántos días hiciste cada tarea en los últimos ${dias} días.`}
+      tabla={filas.map((f) => [nombre(f.id)?.nombre ?? "Tarea", textoDias(f)])}
+    >
+      {rutinas.data.length === 0 ? (
+        <SinDatos>
+          Arma tu rutina en <Link href="/habitos#rutina" className="font-medium text-violeta-texto underline">Hábitos → Tu rutina</Link> para ver aquí cuántos días la haces.
+        </SinDatos>
+      ) : (
+        <div className="space-y-4">
+          <p className="font-bold">
+            Hiciste algo de tu rutina <span className="text-verde-texto">{diasConRutina}</span> de {dias} días.
+          </p>
+          <BarrasHorizontales
+            max={1}
+            filas={filas.map((f) => {
+              const r = nombre(f.id);
+              return {
+                id: f.id,
+                etiqueta: (
+                  <>
+                    <span aria-hidden>{r?.icono}</span> {r?.nombre ?? "Tarea"}
+                  </>
+                ),
+                valor: f.tocaban > 0 ? Math.min(1, f.hechos / f.tocaban) : 0,
+                texto: textoDias(f),
+              };
+            })}
+          />
+        </div>
+      )}
+    </TarjetaGrafico>
   );
 }
 
